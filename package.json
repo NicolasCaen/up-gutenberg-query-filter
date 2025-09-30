@@ -1,0 +1,19 @@
+{
+	"name": "query-loop-filter",
+	"version": "1.0.0",
+	"private": true,
+	"description": "Filter blocks for query loops",
+	"scripts": {
+		"build": "wp-scripts build --experimental-modules",
+		"start": "wp-scripts start --experimental-modules",
+		"format": "wp-scripts format",
+		"lint:css": "wp-scripts lint-style --fix",
+		"lint:js": "wp-scripts lint-js",
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"author": "Upcoder",
+	"license": "GPL-2.0-or-later",
+	"dependencies": {
+		"@wordpress/scripts": "^28.6.0"
+	}
+}

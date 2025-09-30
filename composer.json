@@ -1,0 +1,16 @@
+{
+	"name": "up/query-loop-filter",
+	"version": "1.0.0",
+	"description": "Filtre des query loop",
+	"type": "wordpress-plugin",
+	"require": {
+		"composer/installers": "^1 || ^2"
+	},
+	"license": "GPL-2.0-or-later",
+	"authors": [
+		{
+			"name": "Upcoder",
+			"email": "nicolas.gehin@upcoder.com"
+		}
+	]
+}
