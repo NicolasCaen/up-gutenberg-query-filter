@@ -46,9 +46,13 @@
 		},
         "controlType": {
             "type": "string",
-            "enum": ["checkbox", "radio", "select"],
+            "enum": ["checkbox", "radio", "select", "tag-buttons", "search-multi"],
             "default": "checkbox"
         },
+		"showAllButton": {
+			"type": "boolean",
+			"default": false
+		},
 		"emptyLabel": {
 			"type": "string",
 			"default": ""

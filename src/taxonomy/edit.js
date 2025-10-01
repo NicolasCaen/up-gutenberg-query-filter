@@ -9,7 +9,7 @@ import {
 import { useSelect } from '@wordpress/data';
 
 export default function Edit( { attributes, setAttributes } ) {
-	const { taxonomy, controlType = 'checkbox', emptyLabel, label, showLabel, operator = 'IN' } = attributes;
+	const { taxonomy, controlType = 'checkbox', emptyLabel, label, showLabel, showAllButton = false, operator = 'IN' } = attributes;
 
 	const taxonomies = useSelect(
 		( select ) => {
@@ -76,11 +76,18 @@ export default function Edit( { attributes, setAttributes } ) {
 							setAttributes( { showLabel } )
 						}
 					/>
+                    <ToggleControl
+                        label={ __( "Show 'All' button", 'query-filter' ) }
+                        checked={ !! showAllButton }
+                        onChange={ ( value ) => setAttributes( { showAllButton: value } ) }
+                    />
 					<SelectControl
 						label={ __( 'Control Type', 'query-filter' ) }
 						value={ controlType }
 						options={ [
 							{ label: __( 'Checkboxes (multiple)', 'query-filter' ), value: 'checkbox' },
+							{ label: __( 'Tag Buttons (multiple)', 'query-filter' ), value: 'tag-buttons' },
+							{ label: __( 'Search Multi (multiple)', 'query-filter' ), value: 'search-multi' },
 							{ label: __( 'Radio (single)', 'query-filter' ), value: 'radio' },
 							{ label: __( 'Select (single)', 'query-filter' ), value: 'select' },
 						] }
@@ -119,9 +126,11 @@ export default function Edit( { attributes, setAttributes } ) {
 						className="wp-block-query-filter-taxonomy__select wp-block-query-filter__select"
 						inert
 					>
-						<option>
-							{ emptyLabel || __( 'All', 'query-filter' ) }
-						</option>
+						{ !! showAllButton && (
+							<option>
+								{ emptyLabel || __( 'All', 'query-filter' ) }
+							</option>
+						) }
 						{ terms.map( ( term ) => (
 							<option key={ term.slug }>{ term.name }</option>
 						) ) }
@@ -129,9 +138,11 @@ export default function Edit( { attributes, setAttributes } ) {
 				) }
 				{ controlType === 'radio' && (
 					<div className="wp-block-query-filter__terms" inert>
-						<button type="button" className="wp-block-query-filter__reset">
-							{ emptyLabel || __( 'All', 'query-filter' ) }
-						</button>
+						{ !! showAllButton && (
+							<button type="button" className="wp-block-query-filter__reset">
+								{ emptyLabel || __( 'All', 'query-filter' ) }
+							</button>
+						) }
 						{ terms.map( ( term ) => (
 							<div key={ term.slug } className="wp-block-query-filter__term">
 								<input type="radio" className="wp-block-query-filter__radio" />
@@ -142,15 +153,45 @@ export default function Edit( { attributes, setAttributes } ) {
 				) }
 				{ controlType === 'checkbox' && (
 					<div className="wp-block-query-filter__terms" inert>
-						<button type="button" className="wp-block-query-filter__reset">
-							{ emptyLabel || __( 'All', 'query-filter' ) }
-						</button>
+						{ !! showAllButton && (
+							<button type="button" className="wp-block-query-filter__reset">
+								{ emptyLabel || __( 'All', 'query-filter' ) }
+							</button>
+						) }
 						{ terms.map( ( term ) => (
 							<div key={ term.slug } className="wp-block-query-filter__term">
 								<input type="checkbox" className="wp-block-query-filter__checkbox" />
 								<label>{ term.name }</label>
 							</div>
 						) ) }
+					</div>
+				) }
+				{ controlType === 'tag-buttons' && (
+					<div className="wp-block-query-filter__terms" inert>
+						{ !! showAllButton && (
+							<button type="button" className="wp-block-query-filter__reset">
+								{ emptyLabel || __( 'All', 'query-filter' ) }
+							</button>
+						) }
+						{ terms.map( ( term ) => (
+							<button key={ term.slug } type="button" className={`tag-btn__${ taxonomy } tag-btn__${ taxonomy }--${ term.slug }`}>
+								{ term.name }
+							</button>
+						) ) }
+					</div>
+				) }
+				{ controlType === 'search-multi' && (
+					<div className="wp-block-query-filter__typeahead" inert>
+						<div className="typeahead__tokens">
+							{/* tokens preview */}
+						</div>
+						<input className="typeahead__input" placeholder={ __( 'Rechercher…', 'query-filter' ) } />
+						<ul className="wp-block-query-filter__suggestions"></ul>
+						{ !! showAllButton && (
+							<button type="button" className="wp-block-query-filter__reset">
+								{ emptyLabel || __( 'All', 'query-filter' ) }
+							</button>
+						) }
 					</div>
 				) }
 			</div>

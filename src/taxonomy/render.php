@@ -47,7 +47,7 @@ if ( is_wp_error( $terms ) || empty( $terms ) ) {
     data-query-var="<?php echo esc_attr( $query_var ); ?>"
     data-page-var="<?php echo esc_attr( $page_var ); ?>"
     data-operator="<?php echo esc_attr( $attributes['operator'] ?? 'IN' ); ?>"
-    <?php if ( $control_type === 'checkbox' ) : ?> data-op-var="<?php echo esc_attr( $op_var ); ?>"<?php endif; ?>
+    <?php if ( in_array( $control_type, [ 'checkbox', 'tag-buttons', 'search-multi' ], true ) ) : ?> data-op-var="<?php echo esc_attr( $op_var ); ?>"<?php endif; ?>
 >
     <label class="wp-block-query-filter-post-type__label wp-block-query-filter__label<?php echo $attributes['showLabel'] ? '' : ' screen-reader-text' ?>" for="<?php echo esc_attr( $id ); ?>">
         <?php echo esc_html( $attributes['label'] ?? $taxonomy->label ); ?>
@@ -64,7 +64,9 @@ if ( is_wp_error( $terms ) || empty( $terms ) ) {
             id="<?php echo esc_attr( $id ); ?>"
             data-wp-on--change="actions.navigate"
         >
-            <option value="<?php echo esc_attr( $base_url ); ?>"><?php echo esc_html( $attributes['emptyLabel'] ?: __( 'All', 'query-filter' ) ); ?></option>
+            <?php if ( ! empty( $attributes['showAllButton'] ) ) : ?>
+                <option value="<?php echo esc_attr( $base_url ); ?>"><?php echo esc_html( $attributes['emptyLabel'] ?: __( 'All', 'query-filter' ) ); ?></option>
+            <?php endif; ?>
             <?php foreach ( $terms as $term ) :
                 $url = add_query_arg( [ $query_var => $term->slug, $page_var => false ], $base_url );
             ?>
@@ -75,9 +77,11 @@ if ( is_wp_error( $terms ) || empty( $terms ) ) {
         </select>
     <?php elseif ( $control_type === 'radio' ) : ?>
         <div class="wp-block-query-filter__terms" id="<?php echo esc_attr( $id ); ?>">
-            <button type="button" class="wp-block-query-filter__reset" value="<?php echo esc_attr( $base_url ); ?>" data-wp-on--click="actions.navigate">
-                <?php echo esc_html( $attributes['emptyLabel'] ?: __( 'All', 'query-filter' ) ); ?>
-            </button>
+            <?php if ( ! empty( $attributes['showAllButton'] ) ) : ?>
+                <button type="button" class="wp-block-query-filter__reset" value="<?php echo esc_attr( $base_url ); ?>" data-wp-on--click="actions.navigate">
+                    <?php echo esc_html( $attributes['emptyLabel'] ?: __( 'All', 'query-filter' ) ); ?>
+                </button>
+            <?php endif; ?>
             <?php foreach ( $terms as $term ) :
                 $input_id = $id . '-' . $term->term_id;
                 $url = add_query_arg( [ $query_var => $term->slug, $page_var => false ], $base_url );
@@ -97,13 +101,64 @@ if ( is_wp_error( $terms ) || empty( $terms ) ) {
                 </div>
             <?php endforeach; ?>
         </div>
+    <?php elseif ( $control_type === 'tag-buttons' ) : ?>
+        <div class="wp-block-query-filter__terms" id="<?php echo esc_attr( $id ); ?>">
+            <?php if ( ! empty( $attributes['showAllButton'] ) ) : ?>
+                <button type="button" class="wp-block-query-filter__reset" data-wp-on--click="actions.clearTerms">
+                    <?php echo esc_html( $attributes['emptyLabel'] ?: __( 'All', 'query-filter' ) ); ?>
+                </button>
+            <?php endif; ?>
+            <?php foreach ( $terms as $term ) :
+                $is_active = in_array( $term->slug, $current, true );
+                $bem_base = 'tag-btn__' . $attributes['taxonomy'];
+                $classes = $bem_base . ' ' . $bem_base . '--' . $term->slug . ( $is_active ? ' is-active' : '' );
+            ?>
+                <button
+                    type="button"
+                    class="<?php echo esc_attr( $classes ); ?>"
+                    data-term-value="<?php echo esc_attr( $term->slug ); ?>"
+                    data-wp-on--click="actions.toggleTagButton"
+                ><?php echo esc_html( $term->name ); ?></button>
+            <?php endforeach; ?>
+        </div>
+    <?php elseif ( $control_type === 'search-multi' ) : ?>
+        <?php
+        $terms_payload = array_map( static function ( $t ) {
+            return [ 'slug' => $t->slug, 'name' => $t->name ];
+        }, $terms );
+        ?>
+        <div class="wp-block-query-filter__typeahead" id="<?php echo esc_attr( $id ); ?>"
+            data-terms='<?php echo wp_json_encode( $terms_payload ); ?>'>
+            <div class="typeahead__tokens">
+                <?php foreach ( $current as $slug ) :
+                    $term = get_term_by( 'slug', $slug, $attributes['taxonomy'] );
+                    if ( $term && ! is_wp_error( $term ) ) :
+                        $bem_base = 'tag-btn__' . $attributes['taxonomy'];
+                        $classes = 'token ' . $bem_base . ' ' . $bem_base . '--' . $term->slug;
+                ?>
+                    <span class="<?php echo esc_attr( $classes ); ?>" data-term-value="<?php echo esc_attr( $term->slug ); ?>">
+                        <?php echo esc_html( $term->name ); ?>
+                        <button type="button" class="token__remove" aria-label="<?php esc_attr_e( 'Remove', 'query-filter' ); ?>" data-wp-on--click="actions.removeToken">×</button>
+                    </span>
+                <?php endif; endforeach; ?>
+            </div>
+            <input class="typeahead__input" type="search" autocomplete="off" placeholder="<?php esc_attr_e( 'Search…', 'query-filter' ); ?>" data-wp-on--input="actions.typeahead" />
+            <ul class="wp-block-query-filter__suggestions" role="listbox"></ul>
+            <?php if ( ! empty( $attributes['showAllButton'] ) ) : ?>
+                <button type="button" class="wp-block-query-filter__reset" data-wp-on--click="actions.clearTerms">
+                    <?php echo esc_html( $attributes['emptyLabel'] ?: __( 'All', 'query-filter' ) ); ?>
+                </button>
+            <?php endif; ?>
+        </div>
     <?php else : /* checkbox (default) */ ?>
         <?php // Emit op var only for checkbox (multi-select)
             echo '<div class="wp-block-query-filter__terms" id="' . esc_attr( $id ) . '" data-op-var="' . esc_attr( $op_var ) . '">';
         ?>
-            <button type="button" class="wp-block-query-filter__reset" data-wp-on--click="actions.clearTerms">
-                <?php echo esc_html( $attributes['emptyLabel'] ?: __( 'All', 'query-filter' ) ); ?>
-            </button>
+            <?php if ( ! empty( $attributes['showAllButton'] ) ) : ?>
+                <button type="button" class="wp-block-query-filter__reset" data-wp-on--click="actions.clearTerms">
+                    <?php echo esc_html( $attributes['emptyLabel'] ?: __( 'All', 'query-filter' ) ); ?>
+                </button>
+            <?php endif; ?>
             <?php foreach ( $terms as $term ) :
                 $input_id = $id . '-' . $term->term_id;
                 $checked = in_array( $term->slug, $current, true );

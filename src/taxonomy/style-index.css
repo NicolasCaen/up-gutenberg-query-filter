@@ -3,7 +3,61 @@
 }
 
 .wp-block-query-filter {
-	display: flex;
-	flex-direction: column;
-	justify-content: stretch;
+    display: flex;
+    flex-direction: column;
+    justify-content: stretch;
+}
+
+/* Intentionally no default styles for tag buttons (BEM). */
+
+/* Typeahead tokens */
+.wp-block-query-filter__typeahead {
+    position: relative;
+}
+.typeahead__tokens {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 6px;
+}
+.token {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border: 1px solid var(--wp--preset--color--contrast-3, #ccc);
+    border-radius: 999px;
+    padding: 4px 8px;
+    background: var(--wp--preset--color--contrast-1, #f5f5f5);
+}
+.token__remove {
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+}
+
+.typeahead__input {
+    width: 100%;
+    padding: 8px;
+}
+.wp-block-query-filter__suggestions {
+    position: absolute;
+    z-index: 10;
+    top: 100%;
+    left: 0;
+    right: 0;
+    list-style: none;
+    margin: 4px 0 0;
+    padding: 0;
+    background: var(--wp--preset--color--base, #fff);
+    max-height: 240px;
+    overflow: auto;
+}
+.wp-block-query-filter__suggestions li {
+    padding: 8px 10px;
+    cursor: pointer;
+}
+.wp-block-query-filter__suggestions li:hover {
+    background: var(--wp--preset--color--contrast-1, #f5f5f5);
 }
