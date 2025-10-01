@@ -1,6 +1,6 @@
 {
 	"name": "up/query-loop-filter",
-	"version": "1.3.0",
+	"version": "1.4.0",
 	"description": "Filtre des query loop",
 	"type": "wordpress-plugin",
 	"require": {

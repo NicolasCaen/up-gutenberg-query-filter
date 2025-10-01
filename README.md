@@ -3,7 +3,7 @@
 Plugin WordPress ajoutant des blocs de filtres pour le bloc « Boucle de requête » (Query Loop), avec l'API d'interactivité de Gutenberg.
 
 - Auteur: Upcoder
-- Version: 1.3.0
+- Version: 1.4.0
 - Text Domain: `up-gutenberg-query-filter`
 - Namespace PHP: `up\\query_loop_filter`
 

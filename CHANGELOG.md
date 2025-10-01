@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.0] - 2025-10-01
+
+- New: Taxonomy filter option `hideZeroResults` to hide terms that would yield zero results given other active filters.
+  - Selected terms remain visible even if count would be zero, to avoid trapping users.
+  - Implemented server-side in `src/taxonomy/render.php`, with `data-hide-zero` flag exposed for optional client UX.
+- Editor: Added Inspector toggle for this option in `src/taxonomy/edit.js`.
+- Maintenance: Bumped versions to `1.4.0` (plugin header, composer.json, package.json, block.json files).
+
 ## [1.3.0] - 2025-10-01
 
 - New: Added `Active Filters` block that displays currently applied filters as chips with a close (×) and optional "Clear all".
