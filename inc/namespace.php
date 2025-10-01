@@ -46,19 +46,20 @@ function action_wp_enqueue_scripts() : void {
 		$asset['version']
 	);
 }
-
 /**
  * Fires after WordPress has finished loading but before any headers are sent.
  *
  */
 function register_blocks() : void {
-	register_block_type( ROOT_DIR . '/build/taxonomy' );
-	register_block_type( ROOT_DIR . '/build/post-type' );
+    register_block_type( ROOT_DIR . '/build/taxonomy' );
+    register_block_type( ROOT_DIR . '/build/post-type' );
+    register_block_type( ROOT_DIR . '/build/active-filters' );
 }
 
 /**
  * Filters the arguments which will be passed to `WP_Query` for the Query Loop Block.
  *
+{{ ... }}
  * @param array     $query Array containing parameters for <code>WP_Query</code> as parsed by the block context.
  * @param \WP_Block $block Block instance.
  * @param int       $page  Current query's page.

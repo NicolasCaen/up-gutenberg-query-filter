@@ -61,7 +61,7 @@ $show_reset_button = $attributes['showResetButton'] ?? true;
 ```
 
 ## Compatibilité
-- Cette option est disponible depuis la version 1.1.1
+- Cette option est disponible depuis la version 1.1.2
 - Compatible avec tous les thèmes WordPress
 - Fonctionne en back-office (éditeur) et en front-end
 

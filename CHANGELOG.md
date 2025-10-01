@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.2] - 2025-10-01
+
+- New block: `Active Filters` to display active filters as chips with remove (×) and optional "Clear all".
+  - Attributes: `showClearAll` (bool), `clearAllLabel` (string).
+  - Adds `data-activenumber` on wrapper to expose number of active filters; hides Clear all when 0.
+  - SPA navigation for chip/clear links via Interactivity Router.
+
 ## [1.1.1] - 2025-10-01
 
 - **New Feature**: Dynamic hiding of terms with 0 results when applying multiple filters.

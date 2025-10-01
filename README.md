@@ -3,7 +3,7 @@
 Plugin WordPress ajoutant des blocs de filtres pour le bloc « Boucle de requête » (Query Loop), avec l'API d'interactivité de Gutenberg.
 
 - Auteur: Upcoder
-- Version: 1.1.1
+- Version: 1.1.2
 - Text Domain: `up-gutenberg-query-filter`
 - Namespace PHP: `up\query_loop_filter`
 
@@ -61,6 +61,12 @@ Les sources sont dans `src/` et sont copiées/minifiées dans `build/` lors du b
 - PHP ≥ 8.0
 
 ## Journal des modifications
+### 1.1.2 — 2025-10-01
+- **Nouveau bloc**: `Active Filters` pour afficher les filtres actifs sous forme de chips avec croix pour retirer un filtre.
+  - Option `showClearAll` et libellé `clearAllLabel`.
+  - Navigation SPA via Interactivity Router.
+  - Ajout de `data-activenumber` sur le wrapper pour refléter le nombre de filtres actifs et masquer "Effacer tout" si 0.
+
 ### 1.1.1 — 2025-10-01
 - **Nouvelle fonctionnalité**: Masquage dynamique des termes avec 0 résultats lors de l'application de filtres multiples.
   - Ajout d'un endpoint REST API `/wp-json/query-filter/v1/available-terms` pour récupérer les termes disponibles selon les filtres actifs.

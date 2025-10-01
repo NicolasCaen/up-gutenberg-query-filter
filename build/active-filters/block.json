@@ -1,0 +1,42 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "query-filter/active-filters",
+  "version": "1.1.2",
+  "title": "Active Filters",
+  "category": "theme",
+  "icon": "filter",
+  "description": "Display currently active filters as removable chips with an optional clear-all.",
+  "ancestor": [
+    "core/query"
+  ],
+  "usesContext": [
+    "queryId",
+    "query"
+  ],
+  "supports": {
+    "html": false,
+    "className": true,
+    "customClassName": true,
+    "spacing": {
+      "margin": true,
+      "padding": true,
+      "blockGap": true
+    }
+  },
+  "attributes": {
+    "showClearAll": {
+      "type": "boolean",
+      "default": true
+    },
+    "clearAllLabel": {
+      "type": "string",
+      "default": "Effacer tout"
+    }
+  },
+  "textdomain": "up-gutenberg-query-filter",
+  "editorScript": "file:./index.js",
+  "style": "file:./style-index.css",
+  "viewScriptModule": "file:./view.js",
+  "render": "file:./render.php"
+}
