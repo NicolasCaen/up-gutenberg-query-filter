@@ -95,7 +95,33 @@ function pre_get_posts_transpose_query_vars( WP_Query $query ) : void {
             $query->get( $key, $default )
         );
     }
-    foreach ( $_GET as $key => $value ) {
+    // Support short params: q[<id>]-<taxonomy>=... and op[<id>]-<taxonomy>=IN|AND
+    // Map them to existing long-form keys to reuse existing logic.
+    $translated = [];
+    foreach ( $_GET as $gk => $gv ) {
+        $raw_key = (string) $gk;
+        $raw_val = (string) $gv;
+        // Match value params: q<id>-<taxonomy> or q-<taxonomy>
+        if ( preg_match( '/^q(\d+)?-(.+)$/', $raw_key, $m ) ) {
+            $id  = $m[1] ?? '';
+            $tax = $m[2] ?? '';
+            $dst = $id !== '' ? sprintf( 'query-%d-%s', (int) $id, $tax ) : sprintf( 'query-%s', $tax );
+            $translated[ $dst ] = $raw_val;
+            continue;
+        }
+        // Match operator params: op<id>-<taxonomy> or op-<taxonomy>
+        if ( preg_match( '/^op(\d+)?-(.+)$/', $raw_key, $m ) ) {
+            $id  = $m[1] ?? '';
+            $tax = $m[2] ?? '';
+            $dst = $id !== '' ? sprintf( 'query-%d-%s-op', (int) $id, $tax ) : sprintf( 'query-%s-op', $tax );
+            $translated[ $dst ] = $raw_val;
+            continue;
+        }
+    }
+
+    $inputs = array_merge( $_GET, $translated );
+
+    foreach ( $inputs as $key => $value ) {
         if ( strpos( $key, $prefix ) !== 0 ) {
             continue;
         }

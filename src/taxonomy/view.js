@@ -11,16 +11,16 @@ const updateURL = async ( action, value, name ) => {
     await actions.navigate( url.toString() );
 };
 
-const navigateTaxonomy = async ( baseUrl, queryVar, pageVar, value, operator ) => {
+const navigateTaxonomy = async ( baseUrl, queryVar, opVar, pageVar, value, operator ) => {
     const url = new URL( baseUrl, window.location.origin );
     if ( value && value.length ) {
         url.searchParams.set( queryVar, value.join( ',' ) );
-        if ( operator ) {
-            url.searchParams.set( `${ queryVar }-op`, operator );
+        if ( operator && opVar ) {
+            url.searchParams.set( opVar, operator );
         }
     } else {
         url.searchParams.delete( queryVar );
-        url.searchParams.delete( `${ queryVar }-op` );
+        if ( opVar ) url.searchParams.delete( opVar );
     }
     // Reset pagination when changing filters
     url.searchParams.delete( pageVar );
@@ -71,22 +71,24 @@ const { state } = store( 'query-filter', {
             const values = getSelectedValues( container );
             const baseUrl = container.dataset.baseUrl;
             const queryVar = container.dataset.queryVar;
+            const opVar = container.dataset.opVar;
             const pageVar = container.dataset.pageVar;
             const operator = container.dataset.operator || 'IN';
-            yield navigateTaxonomy( baseUrl, queryVar, pageVar, values, operator );
+            yield navigateTaxonomy( baseUrl, queryVar, opVar, pageVar, values, operator );
         },
         *clearTerms() {
             const { ref } = getElement();
             const container = getContainer( ref );
             const baseUrl = container.dataset.baseUrl;
             const queryVar = container.dataset.queryVar;
+            const opVar = container.dataset.opVar;
             const pageVar = container.dataset.pageVar;
             // Uncheck all
             container
                 .querySelectorAll( '.wp-block-query-filter__checkbox:checked' )
                 .forEach( ( el ) => ( el.checked = false ) );
             const operator = container.dataset.operator || 'IN';
-            yield navigateTaxonomy( baseUrl, queryVar, pageVar, [], operator );
+            yield navigateTaxonomy( baseUrl, queryVar, opVar, pageVar, [], operator );
         },
     },
 } );
