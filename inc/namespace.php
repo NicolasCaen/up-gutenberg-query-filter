@@ -62,11 +62,11 @@ function register_blocks() : void {
  * @return array Array containing parameters for <code>WP_Query</code> as parsed by the block context.
  */
 function filter_query_loop_block_query_vars( array $query, \WP_Block $block, int $page ) : array {
-	if ( isset( $block->context['queryId'] ) ) {
-		$query['query_id'] = $block->context['queryId'];
-	}
+    if ( isset( $block->context['queryId'] ) ) {
+        $query['query_id'] = $block->context['queryId'];
+    }
 
-	return $query;
+    return $query;
 }
 
 /**
@@ -75,83 +75,125 @@ function filter_query_loop_block_query_vars( array $query, \WP_Block $block, int
  * @param  WP_Query $query The WP_Query instance (passed by reference).
  */
 function pre_get_posts_transpose_query_vars( WP_Query $query ) : void {
-	$query_id = $query->get( 'query_id', null );
-	if ( ! $query->is_main_query() && is_null( $query_id ) ) {
-		return;
-	}
+    $query_id = $query->get( 'query_id', null );
+    if ( ! $query->is_main_query() && is_null( $query_id ) ) {
+        return;
+    }
 
-	$prefix = $query->is_main_query() ? 'query-' : "query-{$query_id}-";
-	$tax_query = [];
-	$tax_operators = [];
-	$valid_keys = [
-		'post_type' => $query->is_search() ? 'any' : 'post',
-		's' => '',
-	];
+    $prefix = $query->is_main_query() ? 'query-' : "query-{$query_id}-";
+    $tax_query = [];
+    $tax_operators = [];
+    $valid_keys = [
+        'post_type' => $query->is_search() ? 'any' : 'post',
+        's' => '',
+    ];
 
-	// Preserve valid params for later retrieval.
-	foreach ( $valid_keys as $key => $default ) {
-		$query->set(
-			"query-filter-$key",
-			$query->get( $key, $default )
-		);
-	}
+    // Preserve valid params for later retrieval.
+    foreach ( $valid_keys as $key => $default ) {
+        $query->set(
+            "query-filter-$key",
+            $query->get( $key, $default )
+        );
+    }
+    foreach ( $_GET as $key => $value ) {
+        if ( strpos( $key, $prefix ) !== 0 ) {
+            continue;
+        }
 
-	// Map get params to this query.
-	foreach ( $_GET as $key => $value ) {
-		if ( strpos( $key, $prefix ) === 0 ) {
-			$key = str_replace( $prefix, '', $key );
-			$value = sanitize_text_field( urldecode( wp_unslash( $value ) ) );
+        $key = str_replace( $prefix, '', $key );
+        $value = sanitize_text_field( urldecode( wp_unslash( $value ) ) );
 
-			// Handle taxonomies specifically.
-			// First capture explicit operator params in the form <taxonomy>-op.
-			if ( substr( $key, -3 ) === '-op' ) {
-				$tax_key = substr( $key, 0, -3 );
-				if ( get_taxonomy( $tax_key ) ) {
-					$op = strtoupper( $value );
-					$tax_operators[ $tax_key ] = in_array( $op, [ 'IN', 'AND' ], true ) ? $op : 'IN';
-				}
-				continue;
-			}
+        // Handle taxonomies specifically: capture explicit operator params in the form <taxonomy>-op.
+        if ( substr( $key, -3 ) === '-op' ) {
+            $tax_key = substr( $key, 0, -3 );
+            if ( get_taxonomy( $tax_key ) ) {
+                $op = strtoupper( $value );
+                $tax_operators[ $tax_key ] = in_array( $op, [ 'IN', 'AND' ], true ) ? $op : 'IN';
+            }
+            continue;
+        }
 
-			if ( get_taxonomy( $key ) ) {
-				$tax_query['relation'] = 'AND';
-				$slugs = array_filter( array_map( 'sanitize_title', array_map( 'trim', explode( ',', (string) $value ) ) ) );
-				if ( ! empty( $slugs ) ) {
-					$tax_query[] = [
-						'taxonomy' => $key,
-						'terms' => $slugs,
-						'field' => 'slug',
-						'operator' => $tax_operators[ $key ] ?? 'IN',
-					];
-				}
-			} else {
-				// Other options should map directly to query vars.
-				$key = sanitize_key( $key );
+        if ( get_taxonomy( $key ) ) {
+            $tax_query['relation'] = 'AND';
+            $slugs = array_filter( array_map( 'sanitize_title', array_map( 'trim', explode( ',', (string) $value ) ) ) );
+            if ( ! empty( $slugs ) ) {
+                $tax_query[] = [
+                    'taxonomy' => $key,
+                    'terms'    => $slugs,
+                    'field'    => 'slug',
+                    'operator' => $tax_operators[ $key ] ?? 'IN',
+                ];
+            }
+        } else {
+            // Other options should map directly to query vars.
+            if ( ! in_array( $key, array_keys( $valid_keys ), true ) ) {
+                continue;
+            }
+            $query->set( $key, $value );
+        }
+    }
 
-				if ( ! in_array( $key, array_keys( $valid_keys ), true ) ) {
-					continue;
-				}
-
-				$query->set(
-					$key,
-					$value
-				);
-			}
-		}
-	}
+    // Default to current term on any taxonomy archive when no explicit filter for that taxonomy is present.
+    if ( is_category() || is_tax() ) {
+        $term = get_queried_object();
+        if ( $term && ! is_wp_error( $term ) && isset( $term->taxonomy, $term->term_id ) ) {
+            $taxonomy = $term->taxonomy;
+            $has_filter_for_tax = false;
+            if ( ! empty( $tax_query ) ) {
+                foreach ( $tax_query as $clause ) {
+                    if ( is_array( $clause ) && ( $clause['taxonomy'] ?? '' ) === $taxonomy ) {
+                        $has_filter_for_tax = true;
+                        break;
+                    }
+                }
+            }
+            if ( ! $has_filter_for_tax ) {
+                $tax_query['relation'] = 'AND';
+                $tax_query[] = [
+                    'taxonomy' => $taxonomy,
+                    'terms'    => [ (int) $term->term_id ],
+                    'field'    => 'term_id',
+                    'operator' => $tax_operators[ $taxonomy ] ?? 'IN',
+                ];
+            }
+        }
+    }
 
 	if ( ! empty( $tax_query ) ) {
 		$existing_query = $query->get( 'tax_query', [] );
 
-		if ( ! empty( $existing_query ) ) {
-			$tax_query = [
-				'relation' => 'AND',
-				[ $existing_query ],
-				$tax_query,
-			];
+		// Normalize existing tax_query into a flat list of clauses.
+		$existing_clauses = [];
+		if ( is_array( $existing_query ) && ! empty( $existing_query ) ) {
+			if ( isset( $existing_query['relation'] ) ) {
+				foreach ( $existing_query as $k => $v ) {
+					if ( is_int( $k ) && is_array( $v ) ) {
+						$existing_clauses[] = $v;
+					}
+				}
+			} else {
+				$existing_clauses = $existing_query;
+			}
 		}
 
-		$query->set( 'tax_query', $tax_query );
+		// Normalize new tax_query into a flat list of clauses.
+		$new_clauses = [];
+		if ( isset( $tax_query['relation'] ) ) {
+			foreach ( $tax_query as $k => $v ) {
+				if ( is_int( $k ) && is_array( $v ) ) {
+					$new_clauses[] = $v;
+				}
+			}
+		} else {
+			$new_clauses = $tax_query;
+		}
+
+		$final_tax_query = [ 'relation' => 'AND' ];
+		foreach ( array_merge( $existing_clauses, $new_clauses ) as $clause ) {
+			$final_tax_query[] = $clause;
+		}
+
+		$query->set( 'tax_query', $final_tax_query );
 	}
 }
 

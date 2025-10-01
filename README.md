@@ -3,7 +3,7 @@
 Plugin WordPress ajoutant des blocs de filtres pour le bloc « Boucle de requête » (Query Loop), avec l'API d'interactivité de Gutenberg.
 
 - Auteur: Upcoder
-- Version: 1.0.0
+- Version: 1.1.0
 - Text Domain: `up-gutenberg-query-filter`
 - Namespace PHP: `up\query_loop_filter`
 
@@ -61,6 +61,15 @@ Les sources sont dans `src/` et sont copiées/minifiées dans `build/` lors du b
 - PHP ≥ 8.0
 
 ## Journal des modifications
+### 1.1.0 — 2025-09-30
+- **Correctif**: fusion correcte des clauses `tax_query` (structure plate, plus de tableaux imbriqués) afin que les filtres s'appliquent de manière fiable.
+- **Amélioration**: application par défaut du terme courant sur toute archive de taxonomie lorsqu’aucun filtre explicite pour cette taxonomie n’est passé.
+  - Fonctionne pour `is_category()` et toute archive `is_tax()` (taxonomies personnalisées).
+- **Compatibilité**: alignement des paramètres GET côté front avec les modes de la Boucle de requête:
+  - Modèle hérité: `query-<taxonomy>` et `query-<taxonomy>-op`.
+  - Boucle avec ID: `query-<id>-<taxonomy>` et `query-<id>-<taxonomy>-op`.
+- **Maintenance**: mise à jour des versions vers `1.1.0` (entête du plugin, composer.json, metadata des blocs `src/*/block.json` et `build/*/block.json`).
+
 ### 1.0.0
 - Première version stable.
 - Harmonisation du namespace `up\query_loop_filter`, du text domain `up-gutenberg-query-filter` et des métadonnées (auteur: Upcoder).
