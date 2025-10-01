@@ -51,6 +51,10 @@ function action_wp_enqueue_scripts() : void {
 function register_blocks() : void {
 	register_block_type( ROOT_DIR . '/build/taxonomy' );
 	register_block_type( ROOT_DIR . '/build/post-type' );
+	// Active Filters block registration
+	if ( file_exists( ROOT_DIR . '/build/active-filters/block.json' ) ) {
+		register_block_type( ROOT_DIR . '/build/active-filters' );
+	}
 }
 
 /**

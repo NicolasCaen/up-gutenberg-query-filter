@@ -3,15 +3,14 @@
 Plugin WordPress ajoutant des blocs de filtres pour le bloc « Boucle de requête » (Query Loop), avec l'API d'interactivité de Gutenberg.
 
 - Auteur: Upcoder
-- Version: 1.2.0
+- Version: 1.3.0
 - Text Domain: `up-gutenberg-query-filter`
-- Namespace PHP: `up\query_loop_filter`
+- Namespace PHP: `up\\query_loop_filter`
 
 ## Fonctionnalités
 - Bloc Taxonomie: filtre les résultats par termes d'une taxonomie (ex: catégories, étiquettes, taxos personnalisées).
 - Bloc Type de contenu: filtre les résultats par type de contenu (`post`, `page`, CPT…).
 - Nouveaux types de contrôle: `checkbox` (multi), `radio` (mono) ou `select` (mono).
-- Paramètres d'URL courts: `q...` et `op...` (compatible avec les anciens `query-...`).
 - Intégration avec les contextes `queryId`/`query` du bloc Query Loop.
 - Mise à jour d'URL et rendu côté serveur pour préserver la pagination et le référencement.
 
@@ -70,6 +69,12 @@ Les sources sont dans `src/` et sont copiées/minifiées dans `build/` lors du b
 - PHP ≥ 8.0
 
 ## Journal des modifications
+### 1.3.0 — 2025-10-01
+- **Nouveau**: Bloc `Active Filters` affichant les filtres actifs en chips avec croix et lien « Effacer tout » optionnel.
+- **Compatibilité**: prise en charge des paramètres courts `q...`/`op...` et des clés legacy côté bloc Active Filters.
+- **UX**: attribut `data-activenumber` sur le wrapper (cache « Effacer tout » si 0).
+- **Stabilisation**: enregistrement du bloc côté PHP et build des assets.
+
 ### 1.2.0 — 2025-10-01
 - **Nouveau**: option de rendu `controlType` pour les blocs Taxonomie et Type de contenu (`checkbox`/`radio`/`select`).
 - **Nouveau**: support des paramètres d'URL courts `q...` et `op...` (lecture rétrocompatible des `query-...`).

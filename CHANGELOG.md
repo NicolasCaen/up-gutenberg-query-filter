@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.0] - 2025-10-01
+
+- New: Added `Active Filters` block that displays currently applied filters as chips with a close (×) and optional "Clear all".
+  - Exposes `data-activenumber` on wrapper to indicate number of active filters and hide Clear all when none.
+  - Supports both short params (`q...`, `op...`) and legacy params (`query-...`, `...-op`).
+  - Registered server-side and shipped with built assets.
+
 ## [1.2.0] - 2025-10-01
 
 - New: Added `controlType` option to both Taxonomy and Post Type blocks to choose the UI: `checkbox` (multi), `radio` (single), or `select` (single).
