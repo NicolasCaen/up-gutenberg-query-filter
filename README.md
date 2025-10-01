@@ -3,13 +3,15 @@
 Plugin WordPress ajoutant des blocs de filtres pour le bloc « Boucle de requête » (Query Loop), avec l'API d'interactivité de Gutenberg.
 
 - Auteur: Upcoder
-- Version: 1.1.0
+- Version: 1.2.0
 - Text Domain: `up-gutenberg-query-filter`
 - Namespace PHP: `up\query_loop_filter`
 
 ## Fonctionnalités
 - Bloc Taxonomie: filtre les résultats par termes d'une taxonomie (ex: catégories, étiquettes, taxos personnalisées).
 - Bloc Type de contenu: filtre les résultats par type de contenu (`post`, `page`, CPT…).
+- Nouveaux types de contrôle: `checkbox` (multi), `radio` (mono) ou `select` (mono).
+- Paramètres d'URL courts: `q...` et `op...` (compatible avec les anciens `query-...`).
 - Intégration avec les contextes `queryId`/`query` du bloc Query Loop.
 - Mise à jour d'URL et rendu côté serveur pour préserver la pagination et le référencement.
 
@@ -30,19 +32,26 @@ Plugin WordPress ajoutant des blocs de filtres pour le bloc « Boucle de requêt
 ### 1) Taxonomy Filter
 - Attributs principaux:
   - `taxonomy` (string): slug de la taxonomie ciblée (ex: `category`).
+  - `controlType` (string): `checkbox` | `radio` | `select` (défaut: `checkbox`).
   - `emptyLabel` (string): libellé pour l'option « Tous ».
   - `label` (string): libellé affiché au-dessus du sélecteur.
   - `showLabel` (bool): afficher/masquer le libellé.
   - `operator` (string): `IN` (OU) ou `AND` (ET) pour la combinaison de termes.
 
-- Paramètres d'URL générés: `query-<queryId>-<taxonomy>` avec les slugs séparés par virgule. Exemple: `?query-3-category=actu,evenements`.
-  - Opérateur optionnel: `query-<queryId>-<taxonomy>-op=AND|IN`.
+- Paramètres d'URL courts générés:
+  - Valeurs: `?q<id>-<taxonomy>=slug1,slug2` (dans une Boucle avec ID) ou `?q-<taxonomy>=...` (héritée).
+  - Opérateur (uniquement `checkbox`): `?op<id>-<taxonomy>=IN|AND` ou `?op-<taxonomy>=...` (héritée).
+  - Compatibilité: les anciens paramètres `query-...` et `...-op` sont toujours lus côté serveur.
 
 ### 2) Post Type Filter
 - Attributs principaux:
+  - `controlType` (string): `select` | `radio` | `checkbox` (défaut: `select`).
   - `label`, `emptyLabel`, `showLabel`.
 
-- Paramètre d'URL généré: `query-<queryId>-post_type=post,page,portfolio`.
+- Paramètres d'URL courts générés:
+  - Valeurs: `?q<id>-post_type=post` (mono: select/radio) ou `?q<id>-post_type=post,page` (multi: checkbox).
+  - Modèle hérité: `?q-post_type=...`.
+  - Compatibilité: l'ancien `query-<id>-post_type=...` est toujours lu.
 
 ## Champs contextuels ajoutés
 Le plugin enrichit certains blocs (ex: `core/search`) avec les contextes `queryId` et `query` pour synchroniser les filtres et la recherche.
@@ -61,6 +70,12 @@ Les sources sont dans `src/` et sont copiées/minifiées dans `build/` lors du b
 - PHP ≥ 8.0
 
 ## Journal des modifications
+### 1.2.0 — 2025-10-01
+- **Nouveau**: option de rendu `controlType` pour les blocs Taxonomie et Type de contenu (`checkbox`/`radio`/`select`).
+- **Nouveau**: support des paramètres d'URL courts `q...` et `op...` (lecture rétrocompatible des `query-...`).
+- **Amélioration**: navigation mono-sélection (radio/select) via URLs préconstruites; multi-sélection (checkbox) via Interactivity API.
+- **Amélioration**: `post_type` accepte plusieurs valeurs (CSV) et `any`.
+
 ### 1.1.0 — 2025-09-30
 - **Correctif**: fusion correcte des clauses `tax_query` (structure plate, plus de tableaux imbriqués) afin que les filtres s'appliquent de manière fiable.
 - **Amélioration**: application par défaut du terme courant sur toute archive de taxonomie lorsqu’aucun filtre explicite pour cette taxonomie n’est passé.

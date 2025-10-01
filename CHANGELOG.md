@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.0] - 2025-10-01
+
+- New: Added `controlType` option to both Taxonomy and Post Type blocks to choose the UI: `checkbox` (multi), `radio` (single), or `select` (single).
+- New: Introduced short URL parameters for filters: `q...` for values and `op...` for combining terms (checkbox only). Backward compatible with legacy `query-...` and `...-op`.
+- Improved: Single-select controls (radio/select) navigate via prebuilt URLs for a snappy UX; multi-select (checkbox) continues to use Interactivity API state updates.
+- Improved: `post_type` now accepts comma-separated lists and `any`.
+
 ## [1.1.0] - 2025-09-30
 
 - **Fixed**: Correct merging of `tax_query` clauses to avoid nested arrays and ensure filters apply reliably.

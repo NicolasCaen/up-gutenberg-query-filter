@@ -37,44 +37,89 @@ if ( is_wp_error( $terms ) || empty( $terms ) ) {
 }
 ?>
 
+<?php $control_type = $attributes['controlType'] ?? 'checkbox'; ?>
+
 <div 
     <?php echo get_block_wrapper_attributes( [ 'class' => 'wp-block-query-filter' ] ); ?>
     data-wp-interactive="query-filter"
     data-wp-context="{}"
     data-base-url="<?php echo esc_attr( $base_url ); ?>"
     data-query-var="<?php echo esc_attr( $query_var ); ?>"
-    data-op-var="<?php echo esc_attr( $op_var ); ?>"
     data-page-var="<?php echo esc_attr( $page_var ); ?>"
     data-operator="<?php echo esc_attr( $attributes['operator'] ?? 'IN' ); ?>"
+    <?php if ( $control_type === 'checkbox' ) : ?> data-op-var="<?php echo esc_attr( $op_var ); ?>"<?php endif; ?>
 >
     <label class="wp-block-query-filter-post-type__label wp-block-query-filter__label<?php echo $attributes['showLabel'] ? '' : ' screen-reader-text' ?>" for="<?php echo esc_attr( $id ); ?>">
         <?php echo esc_html( $attributes['label'] ?? $taxonomy->label ); ?>
     </label>
-
-    <div class="wp-block-query-filter__terms" id="<?php echo esc_attr( $id ); ?>">
-        <?php
+    <?php
         // Read current selection from short var first, then fallback to long var for backward compatibility.
         $raw = $_GET[ $query_var ] ?? ( $_GET[ $query_var_long ] ?? '' );
         $current = $raw !== '' ? array_filter( array_map( 'sanitize_title', array_map( 'trim', explode( ',', wp_unslash( $raw ) ) ) ) ) : [];
-        ?>
-        <button type="button" class="wp-block-query-filter__reset" data-wp-on--click="actions.clearTerms">
-            <?php echo esc_html( $attributes['emptyLabel'] ?: __( 'All', 'query-filter' ) ); ?>
-        </button>
-        <?php foreach ( $terms as $term ) :
-            $input_id = $id . '-' . $term->term_id;
-            $checked = in_array( $term->slug, $current, true );
+    ?>
+
+    <?php if ( $control_type === 'select' ) : ?>
+        <select
+            class="wp-block-query-filter-taxonomy__select wp-block-query-filter__select"
+            id="<?php echo esc_attr( $id ); ?>"
+            data-wp-on--change="actions.navigate"
+        >
+            <option value="<?php echo esc_attr( $base_url ); ?>"><?php echo esc_html( $attributes['emptyLabel'] ?: __( 'All', 'query-filter' ) ); ?></option>
+            <?php foreach ( $terms as $term ) :
+                $url = add_query_arg( [ $query_var => $term->slug, $page_var => false ], $base_url );
             ?>
-            <div class="wp-block-query-filter__term">
-                <input 
-                    type="checkbox"
-                    class="wp-block-query-filter__checkbox"
-                    id="<?php echo esc_attr( $input_id ); ?>"
-                    value="<?php echo esc_attr( $term->slug ); ?>"
-                    data-wp-on--change="actions.toggleTerm"
-                    <?php checked( $checked ); ?>
-                />
-                <label for="<?php echo esc_attr( $input_id ); ?>"><?php echo esc_html( $term->name ); ?></label>
-            </div>
-        <?php endforeach; ?>
-    </div>
+                <option value="<?php echo esc_attr( $url ); ?>" <?php selected( in_array( $term->slug, $current, true ) ); ?>>
+                    <?php echo esc_html( $term->name ); ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+    <?php elseif ( $control_type === 'radio' ) : ?>
+        <div class="wp-block-query-filter__terms" id="<?php echo esc_attr( $id ); ?>">
+            <button type="button" class="wp-block-query-filter__reset" value="<?php echo esc_attr( $base_url ); ?>" data-wp-on--click="actions.navigate">
+                <?php echo esc_html( $attributes['emptyLabel'] ?: __( 'All', 'query-filter' ) ); ?>
+            </button>
+            <?php foreach ( $terms as $term ) :
+                $input_id = $id . '-' . $term->term_id;
+                $url = add_query_arg( [ $query_var => $term->slug, $page_var => false ], $base_url );
+                $checked = in_array( $term->slug, $current, true );
+            ?>
+                <div class="wp-block-query-filter__term">
+                    <input
+                        type="radio"
+                        class="wp-block-query-filter__radio"
+                        id="<?php echo esc_attr( $input_id ); ?>"
+                        name="<?php echo esc_attr( $id ); ?>"
+                        value="<?php echo esc_attr( $url ); ?>"
+                        data-wp-on--change="actions.navigate"
+                        <?php checked( $checked ); ?>
+                    />
+                    <label for="<?php echo esc_attr( $input_id ); ?>"><?php echo esc_html( $term->name ); ?></label>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    <?php else : /* checkbox (default) */ ?>
+        <?php // Emit op var only for checkbox (multi-select)
+            echo '<div class="wp-block-query-filter__terms" id="' . esc_attr( $id ) . '" data-op-var="' . esc_attr( $op_var ) . '">';
+        ?>
+            <button type="button" class="wp-block-query-filter__reset" data-wp-on--click="actions.clearTerms">
+                <?php echo esc_html( $attributes['emptyLabel'] ?: __( 'All', 'query-filter' ) ); ?>
+            </button>
+            <?php foreach ( $terms as $term ) :
+                $input_id = $id . '-' . $term->term_id;
+                $checked = in_array( $term->slug, $current, true );
+            ?>
+                <div class="wp-block-query-filter__term">
+                    <input 
+                        type="checkbox"
+                        class="wp-block-query-filter__checkbox"
+                        id="<?php echo esc_attr( $input_id ); ?>"
+                        value="<?php echo esc_attr( $term->slug ); ?>"
+                        data-wp-on--change="actions.toggleTerm"
+                        <?php checked( $checked ); ?>
+                    />
+                    <label for="<?php echo esc_attr( $input_id ); ?>"><?php echo esc_html( $term->name ); ?></label>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    <?php endif; ?>
 </div>

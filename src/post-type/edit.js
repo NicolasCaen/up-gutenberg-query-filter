@@ -4,7 +4,7 @@ import { PanelBody, TextControl, ToggleControl } from '@wordpress/components';
 import { useSelect } from '@wordpress/data';
 
 export default function Edit( { attributes, setAttributes, context } ) {
-	const { emptyLabel, label, showLabel } = attributes;
+	const { controlType = 'select', emptyLabel, label, showLabel } = attributes;
 
 	const allPostTypes = useSelect( ( select ) => {
 		return (
@@ -55,6 +55,17 @@ export default function Edit( { attributes, setAttributes, context } ) {
 							setAttributes( { showLabel } )
 						}
 					/>
+					// Control Type selector
+					<SelectControl
+						label={ __( 'Control Type', 'query-filter' ) }
+						value={ controlType }
+						options={ [
+							{ label: __( 'Select (single)', 'query-filter' ), value: 'select' },
+							{ label: __( 'Radio (single)', 'query-filter' ), value: 'radio' },
+							{ label: __( 'Checkboxes (multiple)', 'query-filter' ), value: 'checkbox' },
+						] }
+						onChange={ ( value ) => setAttributes( { controlType: value } ) }
+					/>
 					<TextControl
 						label={ __( 'Empty Choice Label', 'query-filter' ) }
 						value={ emptyLabel }
@@ -71,17 +82,45 @@ export default function Edit( { attributes, setAttributes, context } ) {
 						{ label || __( 'Content Type', 'query-filter' ) }
 					</label>
 				) }
-				<select
-					className="wp-block-query-filter-post-type__select wp-block-query-filter__select"
-					inert
-				>
-					<option>
-						{ emptyLabel || __( 'All', 'query-filter' ) }
-					</option>
-					{ postTypes.map( ( type ) => (
-						<option key={ type.slug }>{ type.name }</option>
-					) ) }
-				</select>
+				{ controlType === 'select' && (
+					<select
+						className="wp-block-query-filter-post-type__select wp-block-query-filter__select"
+						inert
+					>
+						<option>
+							{ emptyLabel || __( 'All', 'query-filter' ) }
+						</option>
+						{ postTypes.map( ( type ) => (
+							<option key={ type.slug }>{ type.name }</option>
+						) ) }
+					</select>
+				) }
+				{ controlType === 'radio' && (
+					<div className="wp-block-query-filter__terms" inert>
+						<button type="button" className="wp-block-query-filter__reset">
+							{ emptyLabel || __( 'All', 'query-filter' ) }
+						</button>
+						{ postTypes.map( ( type ) => (
+							<div key={ type.slug } className="wp-block-query-filter__term">
+								<input type="radio" className="wp-block-query-filter__radio" />
+								<label>{ type.name }</label>
+							</div>
+						) ) }
+					</div>
+				) }
+				{ controlType === 'checkbox' && (
+					<div className="wp-block-query-filter__terms" inert>
+						<button type="button" className="wp-block-query-filter__reset">
+							{ emptyLabel || __( 'All', 'query-filter' ) }
+						</button>
+						{ postTypes.map( ( type ) => (
+							<div key={ type.slug } className="wp-block-query-filter__term">
+								<input type="checkbox" className="wp-block-query-filter__checkbox" />
+								<label>{ type.name }</label>
+							</div>
+						) ) }
+					</div>
+				) }
 			</div>
 		</>
 	);

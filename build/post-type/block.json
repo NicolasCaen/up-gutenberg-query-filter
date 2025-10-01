@@ -46,6 +46,15 @@
     }
   },
   "attributes": {
+    "controlType": {
+      "type": "string",
+      "enum": [
+        "checkbox",
+        "radio",
+        "select"
+      ],
+      "default": "select"
+    },
     "emptyLabel": {
       "type": "string",
       "default": ""

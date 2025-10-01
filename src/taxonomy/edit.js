@@ -9,7 +9,7 @@ import {
 import { useSelect } from '@wordpress/data';
 
 export default function Edit( { attributes, setAttributes } ) {
-	const { taxonomy, emptyLabel, label, showLabel, operator = 'IN' } = attributes;
+	const { taxonomy, controlType = 'checkbox', emptyLabel, label, showLabel, operator = 'IN' } = attributes;
 
 	const taxonomies = useSelect(
 		( select ) => {
@@ -77,6 +77,17 @@ export default function Edit( { attributes, setAttributes } ) {
 						}
 					/>
 					<SelectControl
+						label={ __( 'Control Type', 'query-filter' ) }
+						value={ controlType }
+						options={ [
+							{ label: __( 'Checkboxes (multiple)', 'query-filter' ), value: 'checkbox' },
+							{ label: __( 'Radio (single)', 'query-filter' ), value: 'radio' },
+							{ label: __( 'Select (single)', 'query-filter' ), value: 'select' },
+						] }
+						onChange={ ( value ) => setAttributes( { controlType: value } ) }
+					/>
+					{ controlType === 'checkbox' && (
+					<SelectControl
 						label={ __( 'Operator (multi-select)', 'query-filter' ) }
 						value={ operator }
 						options={ [
@@ -86,6 +97,7 @@ export default function Edit( { attributes, setAttributes } ) {
 						help={ __( 'Comment combiner plusieurs termes: OU (IN) ou ET (AND).', 'query-filter' ) }
 						onChange={ ( value ) => setAttributes( { operator: value } ) }
 					/>
+					) }
 					<TextControl
 						label={ __( 'Empty Choice Label', 'query-filter' ) }
 						value={ emptyLabel }
@@ -102,17 +114,45 @@ export default function Edit( { attributes, setAttributes } ) {
 						{ label }
 					</label>
 				) }
-				<select
-					className="wp-block-query-filter-taxonomy__select wp-block-query-filter__select"
-					inert
-				>
-					<option>
-						{ emptyLabel || __( 'All', 'query-filter' ) }
-					</option>
-					{ terms.map( ( term ) => (
-						<option key={ term.slug }>{ term.name }</option>
-					) ) }
-				</select>
+				{ controlType === 'select' && (
+					<select
+						className="wp-block-query-filter-taxonomy__select wp-block-query-filter__select"
+						inert
+					>
+						<option>
+							{ emptyLabel || __( 'All', 'query-filter' ) }
+						</option>
+						{ terms.map( ( term ) => (
+							<option key={ term.slug }>{ term.name }</option>
+						) ) }
+					</select>
+				) }
+				{ controlType === 'radio' && (
+					<div className="wp-block-query-filter__terms" inert>
+						<button type="button" className="wp-block-query-filter__reset">
+							{ emptyLabel || __( 'All', 'query-filter' ) }
+						</button>
+						{ terms.map( ( term ) => (
+							<div key={ term.slug } className="wp-block-query-filter__term">
+								<input type="radio" className="wp-block-query-filter__radio" />
+								<label>{ term.name }</label>
+							</div>
+						) ) }
+					</div>
+				) }
+				{ controlType === 'checkbox' && (
+					<div className="wp-block-query-filter__terms" inert>
+						<button type="button" className="wp-block-query-filter__reset">
+							{ emptyLabel || __( 'All', 'query-filter' ) }
+						</button>
+						{ terms.map( ( term ) => (
+							<div key={ term.slug } className="wp-block-query-filter__term">
+								<input type="checkbox" className="wp-block-query-filter__checkbox" />
+								<label>{ term.name }</label>
+							</div>
+						) ) }
+					</div>
+				) }
 			</div>
 		</>
 	);

@@ -21,6 +21,9 @@ if ( $block->context['query']['inherit'] ) {
     $base_url       = remove_query_arg( [ $query_var_long, $query_var, $page_var ] );
 }
 
+// Determine control type
+$control_type = $attributes['controlType'] ?? 'select';
+
 $post_types = array_map( 'trim', explode( ',', $block->context['query']['postType'] ?? 'post' ) );
 
 // Support for enhanced query block.
@@ -48,19 +51,73 @@ if ( empty( $post_types ) ) {
 }
 ?>
 
-<div <?php echo get_block_wrapper_attributes( [ 'class' => 'wp-block-query-filter' ] ); ?> data-wp-interactive="query-filter" data-wp-context="{}">
+<div <?php echo get_block_wrapper_attributes( [ 'class' => 'wp-block-query-filter' ] ); ?>
+    data-wp-interactive="query-filter"
+    data-wp-context="{}"
+    data-base-url="<?php echo esc_attr( $base_url ); ?>"
+    data-query-var="<?php echo esc_attr( $query_var ); ?>"
+    data-page-var="<?php echo esc_attr( $page_var ); ?>"
+>
     <label class="wp-block-query-filter-post-type__label wp-block-query-filter__label<?php echo $attributes['showLabel'] ? '' : ' screen-reader-text' ?>" for="<?php echo esc_attr( $id ); ?>">
         <?php echo esc_html( $attributes['label'] ?? __( 'Content Type', 'query-filter' ) ); ?>
     </label>
-    <select class="wp-block-query-filter-post-type__select wp-block-query-filter__select" id="<?php echo esc_attr( $id ); ?>" data-wp-on--change="actions.navigate">
-        <option value="<?php echo esc_attr( $base_url ) ?>"><?php echo esc_html( $attributes['emptyLabel'] ?: __( 'All', 'query-filter' ) ); ?></option>
-        <?php foreach ( $post_types as $post_type ) : ?>
-            <?php
-            $current_val = isset( $_GET[ $query_var ] )
-                ? wp_unslash( $_GET[ $query_var ] )
-                : ( isset( $_GET[ $query_var_long ] ) ? wp_unslash( $_GET[ $query_var_long ] ) : '' );
+        <?php
+    $raw = $_GET[ $query_var ] ?? ( $_GET[ $query_var_long ] ?? '' );
+    $current = $raw !== '' ? array_filter( array_map( 'sanitize_title', array_map( 'trim', explode( ',', wp_unslash( $raw ) ) ) ) ) : [];
+    ?>
+
+    <?php if ( $control_type === 'select' ) : ?>
+        <select class="wp-block-query-filter-post-type__select wp-block-query-filter__select" id="<?php echo esc_attr( $id ); ?>" data-wp-on--change="actions.navigate">
+            <option value="<?php echo esc_attr( $base_url ) ?>"><?php echo esc_html( $attributes['emptyLabel'] ?: __( 'All', 'query-filter' ) ); ?></option>
+            <?php foreach ( $post_types as $post_type ) : ?>
+                <option value="<?php echo esc_attr( add_query_arg( [ $query_var => $post_type->name, $page_var => false ], $base_url ) ) ?>" <?php selected( in_array( $post_type->name, $current, true ) ); ?>><?php echo esc_html( $post_type->label ); ?></option>
+            <?php endforeach; ?>
+        </select>
+    <?php elseif ( $control_type === 'radio' ) : ?>
+        <div class="wp-block-query-filter__terms" id="<?php echo esc_attr( $id ); ?>">
+            <button type="button" class="wp-block-query-filter__reset" value="<?php echo esc_attr( $base_url ); ?>" data-wp-on--click="actions.navigate">
+                <?php echo esc_html( $attributes['emptyLabel'] ?: __( 'All', 'query-filter' ) ); ?>
+            </button>
+            <?php foreach ( $post_types as $post_type ) :
+                $input_id = $id . '-' . $post_type->name;
+                $url = add_query_arg( [ $query_var => $post_type->name, $page_var => false ], $base_url );
+                $checked = in_array( $post_type->name, $current, true );
             ?>
-            <option value="<?php echo esc_attr( add_query_arg( [ $query_var => $post_type->name, $page_var => false ], $base_url ) ) ?>" <?php selected( $post_type->name, $current_val ); ?>><?php echo esc_html( $post_type->label ); ?></option>
-        <?php endforeach; ?>
-    </select>
+                <div class="wp-block-query-filter__term">
+                    <input
+                        type="radio"
+                        class="wp-block-query-filter__radio"
+                        id="<?php echo esc_attr( $input_id ); ?>"
+                        name="<?php echo esc_attr( $id ); ?>"
+                        value="<?php echo esc_attr( $url ); ?>"
+                        data-wp-on--change="actions.navigate"
+                        <?php checked( $checked ); ?>
+                    />
+                    <label for="<?php echo esc_attr( $input_id ); ?>"><?php echo esc_html( $post_type->label ); ?></label>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    <?php else : /* checkbox */ ?>
+        <div class="wp-block-query-filter__terms" id="<?php echo esc_attr( $id ); ?>">
+            <button type="button" class="wp-block-query-filter__reset" data-wp-on--click="actions.clearTerms">
+                <?php echo esc_html( $attributes['emptyLabel'] ?: __( 'All', 'query-filter' ) ); ?>
+            </button>
+            <?php foreach ( $post_types as $post_type ) :
+                $input_id = $id . '-' . $post_type->name;
+                $checked = in_array( $post_type->name, $current, true );
+            ?>
+                <div class="wp-block-query-filter__term">
+                    <input 
+                        type="checkbox"
+                        class="wp-block-query-filter__checkbox"
+                        id="<?php echo esc_attr( $input_id ); ?>"
+                        value="<?php echo esc_attr( $post_type->name ); ?>"
+                        data-wp-on--change="actions.toggleTerm"
+                        <?php checked( $checked ); ?>
+                    />
+                    <label for="<?php echo esc_attr( $input_id ); ?>"><?php echo esc_html( $post_type->label ); ?></label>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    <?php endif; ?>
 </div>

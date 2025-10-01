@@ -155,7 +155,12 @@ function pre_get_posts_transpose_query_vars( WP_Query $query ) : void {
             if ( ! in_array( $key, array_keys( $valid_keys ), true ) ) {
                 continue;
             }
-            $query->set( $key, $value );
+            if ( $key === 'post_type' ) {
+                $pt_value = strtolower( $value ) === 'any' ? 'any' : array_filter( array_map( 'sanitize_key', array_map( 'trim', explode( ',', (string) $value ) ) ) );
+                $query->set( 'post_type', $pt_value );
+            } else {
+                $query->set( $key, $value );
+            }
         }
     }
 
