@@ -64,6 +64,10 @@
       "type": "boolean",
       "default": false
     },
+    "hideZeroResults": {
+      "type": "boolean",
+      "default": false
+    },
     "emptyLabel": {
       "type": "string",
       "default": ""

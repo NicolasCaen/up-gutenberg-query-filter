@@ -48,6 +48,7 @@ if ( is_wp_error( $terms ) || empty( $terms ) ) {
     data-page-var="<?php echo esc_attr( $page_var ); ?>"
     data-operator="<?php echo esc_attr( $attributes['operator'] ?? 'IN' ); ?>"
     <?php if ( in_array( $control_type, [ 'checkbox', 'tag-buttons', 'search-multi' ], true ) ) : ?> data-op-var="<?php echo esc_attr( $op_var ); ?>"<?php endif; ?>
+    data-hide-zero="<?php echo ! empty( $attributes['hideZeroResults'] ) ? '1' : '0'; ?>"
 >
     <label class="wp-block-query-filter-post-type__label wp-block-query-filter__label<?php echo $attributes['showLabel'] ? '' : ' screen-reader-text' ?>" for="<?php echo esc_attr( $id ); ?>">
         <?php echo esc_html( $attributes['label'] ?? $taxonomy->label ); ?>
@@ -56,6 +57,102 @@ if ( is_wp_error( $terms ) || empty( $terms ) ) {
         // Read current selection from short var first, then fallback to long var for backward compatibility.
         $raw = $_GET[ $query_var ] ?? ( $_GET[ $query_var_long ] ?? '' );
         $current = $raw !== '' ? array_filter( array_map( 'sanitize_title', array_map( 'trim', explode( ',', wp_unslash( $raw ) ) ) ) ) : [];
+    ?>
+
+    <?php
+    // If requested, compute visible terms based on other active filters only.
+    $visible_terms = null;
+    if ( ! empty( $attributes['hideZeroResults'] ) ) {
+        // Build filters from $_GET excluding current taxonomy; support short and long param names.
+        $tax_query = [];
+        $tax_query['relation'] = 'AND';
+        $tax_operators = [];
+        foreach ( $_GET as $gk => $gv ) {
+            $is_long = strpos( $gk, $query_id !== null ? ( 'query-' . (int) $query_id . '-' ) : 'query-' ) === 0;
+            $is_short = strpos( $gk, $query_id !== null ? ( 'q' . (int) $query_id . '-' ) : 'q-' ) === 0;
+            if ( ! $is_long && ! $is_short ) {
+                continue;
+            }
+            // Determine taxonomy key for this param.
+            $key_no_prefix = $is_long
+                ? str_replace( $query_id !== null ? ( 'query-' . (int) $query_id . '-' ) : 'query-', '', $gk )
+                : str_replace( $query_id !== null ? ( 'q' . (int) $query_id . '-' ) : 'q-', '', $gk );
+
+            // Skip operators here; capture operators mapping separately.
+            if ( substr( $key_no_prefix, -3 ) === '-op' ) {
+                $tax = substr( $key_no_prefix, 0, -3 );
+                if ( $tax && get_taxonomy( $tax ) ) {
+                    $op = strtoupper( sanitize_text_field( wp_unslash( $gv ) ) );
+                    $tax_operators[ $tax ] = in_array( $op, [ 'IN', 'AND' ], true ) ? $op : 'IN';
+                }
+                continue;
+            }
+
+            // Only process taxonomies; ignore current taxonomy.
+            if ( $key_no_prefix && $key_no_prefix !== $attributes['taxonomy'] && get_taxonomy( $key_no_prefix ) ) {
+                $raw = sanitize_text_field( urldecode( wp_unslash( $gv ) ) );
+                if ( $raw === '' ) {
+                    continue;
+                }
+                $slugs = array_filter( array_map( 'sanitize_title', array_map( 'trim', explode( ',', (string) $raw ) ) ) );
+                if ( ! empty( $slugs ) ) {
+                    $tax_query[] = [
+                        'taxonomy' => $key_no_prefix,
+                        'terms'    => $slugs,
+                        'field'    => 'slug',
+                        'operator' => $tax_operators[ $key_no_prefix ] ?? 'IN',
+                    ];
+                }
+            }
+        }
+
+        // Determine search and post_type context.
+        $post_type = $block->context['query']['postType'] ?? 'post';
+        if ( is_string( $post_type ) && strpos( $post_type, ',' ) !== false ) {
+            $post_type = array_filter( array_map( 'sanitize_key', array_map( 'trim', explode( ',', $post_type ) ) ) );
+        }
+        $search_param = empty( $block->context['query']['inherit'] ) ? ( $_GET[ sprintf( 'query-%d-s', $query_id ?? 0 ) ] ?? '' ) : ( $_GET['s'] ?? '' );
+        $search_param = sanitize_text_field( wp_unslash( $search_param ) );
+
+        // Query posts matching other filters.
+        $args = [
+            'post_type' => $post_type ?: 'post',
+            'posts_per_page' => -1,
+            'fields' => 'ids',
+            'no_found_rows' => true,
+            'update_post_meta_cache' => false,
+            'update_post_term_cache' => true,
+        ];
+        if ( ! empty( $tax_query ) && count( $tax_query ) > 1 ) {
+            $args['tax_query'] = $tax_query;
+        }
+        if ( $search_param !== '' ) {
+            $args['s'] = $search_param;
+        }
+        $posts = get_posts( $args );
+
+        // Compute visible terms: selected terms are always visible; otherwise check if any post has the term.
+        $current_slugs = is_array( $current ) ? $current : [];
+        $visible_terms = [];
+        foreach ( $terms as $t ) {
+            if ( in_array( $t->slug, $current_slugs, true ) ) {
+                $visible_terms[ $t->slug ] = true;
+                continue;
+            }
+            $has_any = false;
+            if ( ! empty( $posts ) ) {
+                foreach ( $posts as $pid ) {
+                    if ( has_term( (int) $t->term_id, $attributes['taxonomy'], $pid ) ) {
+                        $has_any = true;
+                        break;
+                    }
+                }
+            }
+            if ( $has_any ) {
+                $visible_terms[ $t->slug ] = true;
+            }
+        }
+    }
     ?>
 
     <?php if ( $control_type === 'select' ) : ?>
@@ -68,6 +165,7 @@ if ( is_wp_error( $terms ) || empty( $terms ) ) {
                 <option value="<?php echo esc_attr( $base_url ); ?>"><?php echo esc_html( $attributes['emptyLabel'] ?: __( 'All', 'query-filter' ) ); ?></option>
             <?php endif; ?>
             <?php foreach ( $terms as $term ) :
+                if ( is_array( $visible_terms ) && empty( $visible_terms[ $term->slug ] ) ) { continue; }
                 $url = add_query_arg( [ $query_var => $term->slug, $page_var => false ], $base_url );
             ?>
                 <option value="<?php echo esc_attr( $url ); ?>" <?php selected( in_array( $term->slug, $current, true ) ); ?>>
@@ -83,6 +181,7 @@ if ( is_wp_error( $terms ) || empty( $terms ) ) {
                 </button>
             <?php endif; ?>
             <?php foreach ( $terms as $term ) :
+                if ( is_array( $visible_terms ) && empty( $visible_terms[ $term->slug ] ) ) { continue; }
                 $input_id = $id . '-' . $term->term_id;
                 $url = add_query_arg( [ $query_var => $term->slug, $page_var => false ], $base_url );
                 $checked = in_array( $term->slug, $current, true );
@@ -109,6 +208,7 @@ if ( is_wp_error( $terms ) || empty( $terms ) ) {
                 </button>
             <?php endif; ?>
             <?php foreach ( $terms as $term ) :
+                if ( is_array( $visible_terms ) && empty( $visible_terms[ $term->slug ] ) ) { continue; }
                 $is_active = in_array( $term->slug, $current, true );
                 $bem_base = 'tag-btn__' . $attributes['taxonomy'];
                 $classes = $bem_base . ' ' . $bem_base . '--' . $term->slug . ( $is_active ? ' is-active' : '' );
@@ -123,9 +223,9 @@ if ( is_wp_error( $terms ) || empty( $terms ) ) {
         </div>
     <?php elseif ( $control_type === 'search-multi' ) : ?>
         <?php
-        $terms_payload = array_map( static function ( $t ) {
+        $terms_payload = array_values( array_map( static function ( $t ) {
             return [ 'slug' => $t->slug, 'name' => $t->name ];
-        }, $terms );
+        }, array_filter( $terms, static function ( $t ) use ( $visible_terms ) { return ! is_array( $visible_terms ) || ! empty( $visible_terms[ $t->slug ] ); } ) ) );
         ?>
         <div class="wp-block-query-filter__typeahead" id="<?php echo esc_attr( $id ); ?>"
             data-terms='<?php echo wp_json_encode( $terms_payload ); ?>'>
@@ -160,6 +260,7 @@ if ( is_wp_error( $terms ) || empty( $terms ) ) {
                 </button>
             <?php endif; ?>
             <?php foreach ( $terms as $term ) :
+                if ( is_array( $visible_terms ) && empty( $visible_terms[ $term->slug ] ) ) { continue; }
                 $input_id = $id . '-' . $term->term_id;
                 $checked = in_array( $term->slug, $current, true );
             ?>
