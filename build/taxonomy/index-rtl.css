@@ -1,1 +1,1 @@
-@view-transition{navigation:auto}.wp-block-query-filter{display:flex;flex-direction:column;justify-content:stretch}
+@view-transition{navigation:auto}.wp-block-query-filter{display:flex;flex-direction:column;justify-content:stretch}.wp-block-query-filter__term{overflow:hidden;transition:opacity .3s ease,max-height .3s ease}.wp-block-query-filter__term[style*="display: none"]{margin:0;max-height:0;opacity:0;padding:0}

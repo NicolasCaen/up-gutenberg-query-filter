@@ -7,3 +7,15 @@
 	flex-direction: column;
 	justify-content: stretch;
 }
+
+.wp-block-query-filter__term {
+	transition: opacity 0.3s ease, max-height 0.3s ease;
+	overflow: hidden;
+}
+
+.wp-block-query-filter__term[style*="display: none"] {
+	opacity: 0;
+	max-height: 0;
+	margin: 0;
+	padding: 0;
+}

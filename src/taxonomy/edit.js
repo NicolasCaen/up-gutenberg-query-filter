@@ -9,7 +9,7 @@ import {
 import { useSelect } from '@wordpress/data';
 
 export default function Edit( { attributes, setAttributes } ) {
-	const { taxonomy, emptyLabel, label, showLabel, operator = 'IN' } = attributes;
+	const { taxonomy, emptyLabel, label, showLabel, showResetButton = true, operator = 'IN' } = attributes;
 
 	const taxonomies = useSelect(
 		( select ) => {
@@ -76,6 +76,14 @@ export default function Edit( { attributes, setAttributes } ) {
 							setAttributes( { showLabel } )
 						}
 					/>
+					<ToggleControl
+						label={ __( 'Show Reset Button', 'query-filter' ) }
+						checked={ showResetButton }
+						help={ __( 'Show or hide the "All" reset button', 'query-filter' ) }
+						onChange={ ( showResetButton ) =>
+							setAttributes( { showResetButton } )
+						}
+					/>
 					<SelectControl
 						label={ __( 'Operator (multi-select)', 'query-filter' ) }
 						value={ operator }
@@ -86,14 +94,16 @@ export default function Edit( { attributes, setAttributes } ) {
 						help={ __( 'Comment combiner plusieurs termes: OU (IN) ou ET (AND).', 'query-filter' ) }
 						onChange={ ( value ) => setAttributes( { operator: value } ) }
 					/>
-					<TextControl
-						label={ __( 'Empty Choice Label', 'query-filter' ) }
-						value={ emptyLabel }
-						placeholder={ __( 'All', 'query-filter' ) }
-						onChange={ ( emptyLabel ) =>
-							setAttributes( { emptyLabel } )
-						}
-					/>
+					{ showResetButton && (
+						<TextControl
+							label={ __( 'Empty Choice Label', 'query-filter' ) }
+							value={ emptyLabel }
+							placeholder={ __( 'All', 'query-filter' ) }
+							onChange={ ( emptyLabel ) =>
+								setAttributes( { emptyLabel } )
+							}
+						/>
+					) }
 				</PanelBody>
 			</InspectorControls>
 			<div { ...useBlockProps( { className: 'wp-block-query-filter' } ) }>
@@ -106,9 +116,11 @@ export default function Edit( { attributes, setAttributes } ) {
 					className="wp-block-query-filter-taxonomy__select wp-block-query-filter__select"
 					inert
 				>
-					<option>
-						{ emptyLabel || __( 'All', 'query-filter' ) }
-					</option>
+					{ showResetButton && (
+						<option>
+							{ emptyLabel || __( 'All', 'query-filter' ) }
+						</option>
+					) }
 					{ terms.map( ( term ) => (
 						<option key={ term.slug }>{ term.name }</option>
 					) ) }

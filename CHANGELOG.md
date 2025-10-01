@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.1] - 2025-10-01
+
+- **New Feature**: Dynamic hiding of terms with 0 results when applying multiple filters.
+  - Added REST API endpoint `/wp-json/query-filter/v1/available-terms` to retrieve available terms based on active filters.
+  - Automatic update of term visibility when filters change.
+  - Smooth CSS transitions for better UX.
+  - Checked terms remain visible even if they have 0 results.
+  - Implementation in `inc/namespace.php` (REST API) and `src/taxonomy/view.js` (frontend logic).
+- **New Option**: Added `showResetButton` attribute to show/hide the "All" reset button in both admin and frontend.
+  - Configurable via the block settings panel.
+  - Default value is `true` (button visible).
+
 ## [1.1.0] - 2025-09-30
 
 - **Fixed**: Correct merging of `tax_query` clauses to avoid nested arrays and ensure filters apply reliably.

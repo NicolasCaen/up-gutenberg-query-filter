@@ -27,6 +27,9 @@ function bootstrap() : void {
 
 	// Query.
 	add_filter( 'render_block_core/query', __NAMESPACE__ . '\\render_block_query', 10, 3 );
+
+	// REST API.
+	add_action( 'rest_api_init', __NAMESPACE__ . '\\register_rest_routes' );
 }
 
 /**
@@ -275,4 +278,130 @@ function render_block_query( $block_content, $block ) {
 	$block_content->set_attribute( 'data-wp-router-region', 'query-' . ( $block['attrs']['queryId'] ?? 0 ) );
 
 	return (string) $block_content;
+}
+
+/**
+ * Register REST API routes.
+ *
+ * @return void
+ */
+function register_rest_routes() : void {
+	register_rest_route( 'query-filter/v1', '/available-terms', [
+		'methods'  => 'GET',
+		'callback' => __NAMESPACE__ . '\\get_available_terms',
+		'permission_callback' => '__return_true',
+		'args' => [
+			'taxonomy' => [
+				'required' => true,
+				'type' => 'string',
+				'sanitize_callback' => 'sanitize_text_field',
+			],
+			'query_id' => [
+				'required' => false,
+				'type' => 'integer',
+				'default' => 0,
+			],
+			'post_type' => [
+				'required' => false,
+				'type' => 'string',
+				'default' => 'post',
+				'sanitize_callback' => 'sanitize_text_field',
+			],
+			'filters' => [
+				'required' => false,
+				'type' => 'string',
+				'default' => '',
+			],
+		],
+	] );
+}
+
+/**
+ * Get available terms for a taxonomy based on current filters.
+ *
+ * @param \WP_REST_Request $request REST request.
+ * @return \WP_REST_Response|\WP_Error
+ */
+function get_available_terms( \WP_REST_Request $request ) {
+	$taxonomy = $request->get_param( 'taxonomy' );
+	$query_id = $request->get_param( 'query_id' );
+	$post_type = $request->get_param( 'post_type' );
+	$filters_param = $request->get_param( 'filters' );
+
+	if ( ! taxonomy_exists( $taxonomy ) ) {
+		return new \WP_Error( 'invalid_taxonomy', 'Invalid taxonomy', [ 'status' => 400 ] );
+	}
+
+	// Parse filters from JSON string
+	$filters = [];
+	if ( ! empty( $filters_param ) ) {
+		$filters = json_decode( $filters_param, true );
+		if ( json_last_error() !== JSON_ERROR_NONE ) {
+			$filters = [];
+		}
+	}
+
+	// Build tax_query from filters, excluding the current taxonomy
+	$tax_query = [ 'relation' => 'AND' ];
+	foreach ( $filters as $filter_taxonomy => $filter_data ) {
+		if ( $filter_taxonomy === $taxonomy || empty( $filter_data['values'] ) ) {
+			continue;
+		}
+		
+		$slugs = array_filter( array_map( 'sanitize_title', (array) $filter_data['values'] ) );
+		if ( ! empty( $slugs ) ) {
+			$tax_query[] = [
+				'taxonomy' => $filter_taxonomy,
+				'terms'    => $slugs,
+				'field'    => 'slug',
+				'operator' => $filter_data['operator'] ?? 'IN',
+			];
+		}
+	}
+
+	// Query posts with current filters
+	$query_args = [
+		'post_type' => $post_type,
+		'posts_per_page' => -1,
+		'fields' => 'ids',
+		'no_found_rows' => true,
+		'update_post_meta_cache' => false,
+		'update_post_term_cache' => true,
+	];
+
+	if ( count( $tax_query ) > 1 ) {
+		$query_args['tax_query'] = $tax_query;
+	}
+
+	$posts = get_posts( $query_args );
+
+	// Get all terms for the requested taxonomy
+	$all_terms = get_terms( [
+		'taxonomy' => $taxonomy,
+		'hide_empty' => false,
+	] );
+
+	if ( is_wp_error( $all_terms ) ) {
+		return new \WP_Error( 'terms_error', 'Error retrieving terms', [ 'status' => 500 ] );
+	}
+
+	// Count posts for each term
+	$available_terms = [];
+	foreach ( $all_terms as $term ) {
+		$term_posts = array_filter( $posts, function( $post_id ) use ( $term, $taxonomy ) {
+			return has_term( $term->term_id, $taxonomy, $post_id );
+		} );
+		
+		$available_terms[] = [
+			'term_id' => $term->term_id,
+			'slug' => $term->slug,
+			'name' => $term->name,
+			'count' => count( $term_posts ),
+		];
+	}
+
+	return rest_ensure_response( [
+		'taxonomy' => $taxonomy,
+		'terms' => $available_terms,
+	] );
 }

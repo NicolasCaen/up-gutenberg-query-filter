@@ -2,7 +2,7 @@
 	"$schema": "https://schemas.wp.org/trunk/block.json",
 	"apiVersion": 3,
 	"name": "query-filter/taxonomy",
-	"version": "1.1.0",
+	"version": "1.1.1",
 	"title": "Taxonomy Filter",
 	"category": "theme",
 	"icon": "filter",
@@ -52,6 +52,10 @@
 			"type": "string"
 		},
 		"showLabel": {
+			"type": "boolean",
+			"default": true
+		},
+		"showResetButton": {
 			"type": "boolean",
 			"default": true
 		},

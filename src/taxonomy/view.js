@@ -34,6 +34,74 @@ const getSelectedValues = ( container ) =>
         container.querySelectorAll( '.wp-block-query-filter__checkbox:checked' )
     ).map( ( el ) => el.value );
 
+const getAllFilters = () => {
+    const filters = {};
+    const allContainers = document.querySelectorAll( '[data-taxonomy]' );
+    
+    allContainers.forEach( ( container ) => {
+        const taxonomy = container.dataset.taxonomy;
+        const operator = container.dataset.operator || 'IN';
+        const values = getSelectedValues( container );
+        
+        if ( values.length > 0 ) {
+            filters[ taxonomy ] = {
+                values,
+                operator,
+            };
+        }
+    } );
+    
+    return filters;
+};
+
+const updateTermsVisibility = async ( changedContainer ) => {
+    const allContainers = document.querySelectorAll( '[data-taxonomy]' );
+    const currentFilters = getAllFilters();
+    
+    // Update each filter container
+    for ( const container of allContainers ) {
+        const taxonomy = container.dataset.taxonomy;
+        const queryId = container.dataset.queryId || 0;
+        const postType = container.dataset.postType || 'post';
+        
+        // Build filters excluding current taxonomy
+        const filtersForRequest = { ...currentFilters };
+        delete filtersForRequest[ taxonomy ];
+        
+        try {
+            const response = await fetch(
+                `/wp-json/query-filter/v1/available-terms?taxonomy=${ taxonomy }&query_id=${ queryId }&post_type=${ postType }&filters=${ encodeURIComponent( JSON.stringify( filtersForRequest ) ) }`
+            );
+            
+            if ( ! response.ok ) {
+                continue;
+            }
+            
+            const data = await response.json();
+            
+            // Update visibility of terms
+            const termElements = container.querySelectorAll( '.wp-block-query-filter__term' );
+            termElements.forEach( ( termEl ) => {
+                const checkbox = termEl.querySelector( '.wp-block-query-filter__checkbox' );
+                if ( ! checkbox ) return;
+                
+                const termSlug = checkbox.value;
+                const termData = data.terms.find( ( t ) => t.slug === termSlug );
+                
+                if ( termData ) {
+                    if ( termData.count === 0 && ! checkbox.checked ) {
+                        termEl.style.display = 'none';
+                    } else {
+                        termEl.style.display = '';
+                    }
+                }
+            } );
+        } catch ( error ) {
+            console.error( 'Error updating terms visibility:', error );
+        }
+    }
+};
+
 const { state } = store( 'query-filter', {
     actions: {
         *navigate( e ) {
@@ -73,6 +141,10 @@ const { state } = store( 'query-filter', {
             const queryVar = container.dataset.queryVar;
             const pageVar = container.dataset.pageVar;
             const operator = container.dataset.operator || 'IN';
+            
+            // Update terms visibility before navigation
+            yield updateTermsVisibility( container );
+            
             yield navigateTaxonomy( baseUrl, queryVar, pageVar, values, operator );
         },
         *clearTerms() {
@@ -86,6 +158,10 @@ const { state } = store( 'query-filter', {
                 .querySelectorAll( '.wp-block-query-filter__checkbox:checked' )
                 .forEach( ( el ) => ( el.checked = false ) );
             const operator = container.dataset.operator || 'IN';
+            
+            // Update terms visibility after clearing
+            yield updateTermsVisibility( container );
+            
             yield navigateTaxonomy( baseUrl, queryVar, pageVar, [], operator );
         },
     },
