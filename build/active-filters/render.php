@@ -85,8 +85,12 @@ foreach ( $_GET as $key => $value ) {
 	}
 }
 
-// Clear-all URL removes all recognized params and resets pagination.
-$clear_href = remove_query_arg( array_merge( $clear_params, [ $page_var ] ) );
+// Clear-all URL removes all params for this query prefix (values and -op) and resets pagination.
+// Collect every GET key that starts with our $prefix.
+$all_prefix_keys = array_values( array_filter( array_keys( $_GET ), function( $k ) use ( $prefix ) {
+    return strpos( $k, $prefix ) === 0;
+} ) );
+$clear_href = remove_query_arg( array_merge( $all_prefix_keys, [ $page_var ] ) );
 $active_count = count( $chips );
 
 if ( empty( $chips ) && ! $show_clear ) {

@@ -175,3 +175,22 @@ const { state } = store( 'query-filter', {
         },
     },
 } );
+
+// Initialize term visibility and counts on first load
+const initUpdate = () => {
+    // Small timeout to ensure DOM is fully hydrated (for SSR/BlockEditor front-end)
+    setTimeout( () => {
+        updateTermsVisibility();
+    }, 0 );
+};
+
+if ( document.readyState === 'loading' ) {
+    document.addEventListener( 'DOMContentLoaded', initUpdate );
+} else {
+    initUpdate();
+}
+
+// External refresh hook (e.g., active-filters clear-all chip)
+document.addEventListener( 'query-filter:refresh', () => {
+    updateTermsVisibility();
+} );
