@@ -35,9 +35,16 @@ Plugin WordPress ajoutant des blocs de filtres pour le bloc « Boucle de requêt
   - `showLabel` (bool): afficher/masquer le libellé.
   - `showResetButton` (bool): afficher/masquer le bouton de réinitialisation "Tous" (défaut: true).
   - `operator` (string): `IN` (OU) ou `AND` (ET) pour la combinaison de termes.
+  - `resetPosition` (string): position du bouton de réinitialisation, `before` (avant) ou `after` (après) la liste des termes. Défaut: `before`.
+  - `hideZeroCountTerms` (bool): masque les termes non cochés qui auraient 0 résultat selon les filtres actifs. Défaut: `true`.
+  - `showCounts` (bool): affiche le nombre d'éléments correspondant entre parenthèses à côté de chaque terme. Défaut: `false`.
 
 - Paramètres d'URL générés: `query-<queryId>-<taxonomy>` avec les slugs séparés par virgule. Exemple: `?query-3-category=actu,evenements`.
   - Opérateur optionnel: `query-<queryId>-<taxonomy>-op=AND|IN`.
+
+- Comportement:
+  - Au chargement de la page, les compteurs sont calculés et les termes 0 sont masqués selon l'option, sans interaction requise.
+  - Un évènement personnalisé `query-filter:refresh` peut être déclenché pour recalculer à la demande (ex: depuis le bloc Active Filters).
 
 ### 2) Post Type Filter
 - Attributs principaux:
@@ -62,8 +69,14 @@ Les sources sont dans `src/` et sont copiées/minifiées dans `build/` lors du b
 
 ## Journal des modifications
 ### 1.1.3 — 2025-10-02
-- Préparation de version: mise à jour des numéros de version (plugin, composer, package.json, metadata des blocs `src/*/block.json` et `build/*/block.json`).
-- Les notes de changements détaillées seront complétées avant la création du tag.
+- Améliorations du bloc Taxonomy:
+  - Nouveaux attributs: `resetPosition`, `hideZeroCountTerms`, `showCounts`.
+  - Rendu serveur: positionne le bouton de réinitialisation selon `resetPosition`, expose `data-hide-zero-terms` et `data-show-counts`, conserve le libellé original des termes via `data-name`.
+  - Front: prise en charge des nouvelles options, calcul initial au chargement, écoute de l’évènement `query-filter:refresh`.
+- Bloc Active Filters:
+  - "Effacer tout" supprime tous les paramètres de la requête (y compris `-op`) et la pagination.
+  - Au clic sur `.is-clear-all`, décoche tous les filtres et déclenche le recalcul immédiat avant la navigation.
+- Correctifs/robustesse: corrections JSX dans `src/taxonomy/edit.js`, parsing `showCounts`, accolades manquantes, application cohérente des compteurs/masquages au premier rendu.
 
 ### 1.1.2 — 2025-10-01
 - **Nouveau bloc**: `Active Filters` pour afficher les filtres actifs sous forme de chips avec croix pour retirer un filtre.

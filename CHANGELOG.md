@@ -4,8 +4,32 @@ All notable changes to this project will be documented in this file.
 
 ## [1.1.3] - 2025-10-02
 
-- Prepare release: bump versions across plugin header, composer.json, package.json, and block metadata in `src/*/block.json` and `build/*/block.json`.
-- Detailed notes will be finalized prior to tagging 1.1.3.
+- Enhancements to Taxonomy Filter block
+  - New attributes in `src/taxonomy/block.json`:
+    - `resetPosition`: position the reset button "before" or "after" the terms (default: `before`).
+    - `hideZeroCountTerms`: hide unchecked terms that would return 0 results under current filters (default: `true`).
+    - `showCounts`: display post counts next to each term (default: `false`).
+  - Server render updates in `src/taxonomy/render.php`:
+    - Output reset button according to `resetPosition`.
+    - Expose `data-hide-zero-terms` and `data-show-counts` flags on the container.
+    - Keep original term label in `data-name` to toggle counts cleanly.
+  - Front-end logic in `src/taxonomy/view.js`:
+    - Honors `hideZeroCountTerms` and `showCounts` when updating each term.
+    - Initializes counts/visibility on first page load (no click required).
+    - Listens for a custom `query-filter:refresh` event to recompute counts/visibility on-demand.
+
+- Active Filters block improvements
+  - Clear-all behavior:
+    - `src/active-filters/render.php`: clear-all link now removes ALL query parameters for the current query prefix, including operator params (`-op`) and pagination.
+    - `src/active-filters/view.js`: when clicking the chip `.is-clear-all`, uncheck all taxonomy checkboxes and dispatch `query-filter:refresh` before navigation so counters/visibility reset immediately.
+
+- Fixes & robustness
+  - Resolved JSX syntax issues in `src/taxonomy/edit.js` and added Inspector controls for the new options.
+  - Corrected `showCounts` flag parsing and closed a missing brace in `src/taxonomy/view.js`.
+  - Ensured initial rendering applies counts/visibility consistently.
+
+- Maintenance
+  - Bumped versions across plugin header, `composer.json`, `package.json`, and block metadata in `src/*/block.json` and `build/*/block.json`.
 
 ## [1.1.2] - 2025-10-01
 
