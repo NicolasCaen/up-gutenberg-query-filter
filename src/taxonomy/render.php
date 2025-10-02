@@ -27,6 +27,12 @@ $terms = get_terms( [
 if ( is_wp_error( $terms ) || empty( $terms ) ) {
 	return;
 }
+
+// New options with defaults.
+$show_reset_button = $attributes['showResetButton'] ?? true;
+$reset_position    = $attributes['resetPosition'] ?? 'before'; // 'before' or 'after'
+$hide_zero_terms   = $attributes['hideZeroCountTerms'] ?? true;
+$show_counts       = $attributes['showCounts'] ?? false;
 ?>
 
 <div 
@@ -40,6 +46,8 @@ if ( is_wp_error( $terms ) || empty( $terms ) ) {
 	data-taxonomy="<?php echo esc_attr( $attributes['taxonomy'] ); ?>"
 	data-query-id="<?php echo esc_attr( $block->context['queryId'] ?? 0 ); ?>"
 	data-post-type="<?php echo esc_attr( $block->context['query']['postType'] ?? 'post' ); ?>"
+	data-hide-zero-terms="<?php echo $hide_zero_terms ? 'true' : 'false'; ?>"
+	data-show-counts="<?php echo $show_counts ? 'true' : 'false'; ?>"
 >
 	<label class="wp-block-query-filter-post-type__label wp-block-query-filter__label<?php echo $attributes['showLabel'] ? '' : ' screen-reader-text' ?>" for="<?php echo esc_attr( $id ); ?>">
 		<?php echo esc_html( $attributes['label'] ?? $taxonomy->label ); ?>
@@ -48,9 +56,8 @@ if ( is_wp_error( $terms ) || empty( $terms ) ) {
 	<div class="wp-block-query-filter__terms" id="<?php echo esc_attr( $id ); ?>">
 		<?php
 		$current = isset( $_GET[ $query_var ] ) ? array_filter( array_map( 'sanitize_title', array_map( 'trim', explode( ',', wp_unslash( $_GET[ $query_var ] ) ) ) ) ) : [];
-		$show_reset_button = $attributes['showResetButton'] ?? true;
 		?>
-		<?php if ( $show_reset_button ) : ?>
+		<?php if ( $show_reset_button && $reset_position === 'before' ) : ?>
 			<button type="button" class="wp-block-query-filter__reset" data-wp-on--click="actions.clearTerms">
 				<?php echo esc_html( $attributes['emptyLabel'] ?: __( 'All', 'query-filter' ) ); ?>
 			</button>
@@ -68,8 +75,13 @@ if ( is_wp_error( $terms ) || empty( $terms ) ) {
 					data-wp-on--change="actions.toggleTerm"
 					<?php checked( $checked ); ?>
 				/>
-				<label for="<?php echo esc_attr( $input_id ); ?>"><?php echo esc_html( $term->name ); ?></label>
+				<label for="<?php echo esc_attr( $input_id ); ?>" data-name="<?php echo esc_attr( $term->name ); ?>"><?php echo esc_html( $term->name ); ?></label>
 			</div>
 		<?php endforeach; ?>
+		<?php if ( $show_reset_button && $reset_position === 'after' ) : ?>
+			<button type="button" class="wp-block-query-filter__reset" data-wp-on--click="actions.clearTerms">
+				<?php echo esc_html( $attributes['emptyLabel'] ?: __( 'All', 'query-filter' ) ); ?>
+			</button>
+		<?php endif; ?>
 	</div>
 </div>

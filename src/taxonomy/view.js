@@ -57,12 +57,13 @@ const getAllFilters = () => {
 const updateTermsVisibility = async ( changedContainer ) => {
     const allContainers = document.querySelectorAll( '[data-taxonomy]' );
     const currentFilters = getAllFilters();
-    
     // Update each filter container
     for ( const container of allContainers ) {
         const taxonomy = container.dataset.taxonomy;
         const queryId = container.dataset.queryId || 0;
         const postType = container.dataset.postType || 'post';
+        const hideZero = (container.dataset.hideZeroTerms || 'true') === 'true';
+        const showCounts = (container.dataset.showCounts || 'false') === 'true';
         
         // Build filters excluding current taxonomy
         const filtersForRequest = { ...currentFilters };
@@ -87,12 +88,20 @@ const updateTermsVisibility = async ( changedContainer ) => {
                 
                 const termSlug = checkbox.value;
                 const termData = data.terms.find( ( t ) => t.slug === termSlug );
+                const label = termEl.querySelector( 'label' );
                 
                 if ( termData ) {
-                    if ( termData.count === 0 && ! checkbox.checked ) {
+                    // Visibility based on setting
+                    if ( hideZero && termData.count === 0 && ! checkbox.checked ) {
                         termEl.style.display = 'none';
                     } else {
                         termEl.style.display = '';
+                    }
+
+                    // Update label with counts if enabled
+                    if ( label ) {
+                        const baseName = label.getAttribute( 'data-name' ) || label.textContent;
+                        label.textContent = showCounts ? `${ baseName } (${ termData.count })` : baseName;
                     }
                 }
             } );

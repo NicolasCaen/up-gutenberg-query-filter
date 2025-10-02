@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.3] - 2025-10-02
+
+- Prepare release: bump versions across plugin header, composer.json, package.json, and block metadata in `src/*/block.json` and `build/*/block.json`.
+- Detailed notes will be finalized prior to tagging 1.1.3.
+
 ## [1.1.2] - 2025-10-01
 
 - New block: `Active Filters` to display active filters as chips with remove (×) and optional "Clear all".

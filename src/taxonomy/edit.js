@@ -9,7 +9,17 @@ import {
 import { useSelect } from '@wordpress/data';
 
 export default function Edit( { attributes, setAttributes } ) {
-	const { taxonomy, emptyLabel, label, showLabel, showResetButton = true, operator = 'IN' } = attributes;
+	const {
+		taxonomy,
+		emptyLabel,
+		label,
+		showLabel,
+		showResetButton = true,
+		operator = 'IN',
+		resetPosition = 'before',
+		hideZeroCountTerms = true,
+		showCounts = false,
+	} = attributes;
 
 	const taxonomies = useSelect(
 		( select ) => {
@@ -28,7 +38,6 @@ export default function Edit( { attributes, setAttributes } ) {
 		},
 		[ taxonomy ]
 	);
-
 	const terms = useSelect(
 		( select ) => {
 			return (
@@ -51,39 +60,42 @@ export default function Edit( { attributes, setAttributes } ) {
 							label: taxonomy.name,
 							value: taxonomy.slug,
 						} ) ) }
-						onChange={ ( taxonomy ) =>
+						onChange={ ( nextTax ) =>
 							setAttributes( {
-								taxonomy,
-								label: taxonomies.find(
-									( tax ) => tax.slug === taxonomy
-								).name,
+								taxonomy: nextTax,
+								label:
+									( taxonomies || [] ).find( ( t ) => t.slug === nextTax )?.name || label,
 							} )
 						}
 					/>
 					<TextControl
 						label={ __( 'Label', 'query-filter' ) }
 						value={ label }
-						help={ __(
-							'If empty then no label will be shown',
-							'query-filter'
-						) }
-						onChange={ ( label ) => setAttributes( { label } ) }
+						help={ __( 'If empty then no label will be shown', 'query-filter' ) }
+						onChange={ ( next ) => setAttributes( { label: next } ) }
 					/>
 					<ToggleControl
 						label={ __( 'Show Label', 'query-filter' ) }
-						checked={ showLabel }
-						onChange={ ( showLabel ) =>
-							setAttributes( { showLabel } )
-						}
+						checked={ !! showLabel }
+						onChange={ ( next ) => setAttributes( { showLabel: next } ) }
 					/>
 					<ToggleControl
 						label={ __( 'Show Reset Button', 'query-filter' ) }
-						checked={ showResetButton }
+						checked={ !! showResetButton }
 						help={ __( 'Show or hide the "All" reset button', 'query-filter' ) }
-						onChange={ ( showResetButton ) =>
-							setAttributes( { showResetButton } )
-						}
+						onChange={ ( next ) => setAttributes( { showResetButton: next } ) }
 					/>
+					{ showResetButton && (
+						<SelectControl
+							label={ __( 'Reset Button Position', 'query-filter' ) }
+							value={ resetPosition }
+							options={ [
+								{ label: __( 'Before terms', 'query-filter' ), value: 'before' },
+								{ label: __( 'After terms', 'query-filter' ), value: 'after' },
+							] }
+							onChange={ ( next ) => setAttributes( { resetPosition: next } ) }
+						/>
+					) }
 					<SelectControl
 						label={ __( 'Operator (multi-select)', 'query-filter' ) }
 						value={ operator }
@@ -92,18 +104,28 @@ export default function Edit( { attributes, setAttributes } ) {
 							{ label: __( 'AND', 'query-filter' ), value: 'AND' },
 						] }
 						help={ __( 'Comment combiner plusieurs termes: OU (IN) ou ET (AND).', 'query-filter' ) }
-						onChange={ ( value ) => setAttributes( { operator: value } ) }
+						onChange={ ( next ) => setAttributes( { operator: next } ) }
 					/>
 					{ showResetButton && (
 						<TextControl
 							label={ __( 'Empty Choice Label', 'query-filter' ) }
 							value={ emptyLabel }
 							placeholder={ __( 'All', 'query-filter' ) }
-							onChange={ ( emptyLabel ) =>
-								setAttributes( { emptyLabel } )
-							}
+							onChange={ ( next ) => setAttributes( { emptyLabel: next } ) }
 						/>
 					) }
+					<ToggleControl
+						label={ __( 'Hide zero-result terms', 'query-filter' ) }
+						checked={ !! hideZeroCountTerms }
+						help={ __( 'Hide terms that would currently return 0 posts (unchecked terms only).', 'query-filter' ) }
+						onChange={ ( next ) => setAttributes( { hideZeroCountTerms: next } ) }
+					/>
+					<ToggleControl
+						label={ __( 'Show counts next to terms', 'query-filter' ) }
+						checked={ !! showCounts }
+						help={ __( 'Display the number of matching posts next to each term.', 'query-filter' ) }
+						onChange={ ( next ) => setAttributes( { showCounts: next } ) }
+					/>
 				</PanelBody>
 			</InspectorControls>
 			<div { ...useBlockProps( { className: 'wp-block-query-filter' } ) }>
@@ -122,7 +144,7 @@ export default function Edit( { attributes, setAttributes } ) {
 						</option>
 					) }
 					{ terms.map( ( term ) => (
-						<option key={ term.slug }>{ term.name }</option>
+						<option key={ term.slug } value={ term.slug }>{ term.name }</option>
 					) ) }
 				</select>
 			</div>
