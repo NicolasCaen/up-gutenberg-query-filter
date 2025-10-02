@@ -8,15 +8,15 @@ export default function Edit( { attributes, setAttributes } ) {
 	return (
 		<>
 			<InspectorControls>
-				<PanelBody title={ __( 'Active Filters Settings', 'query-filter' ) }>
+				<PanelBody title={ __( 'Paramètres des filtres actifs', 'up-gutenberg-query-filter' ) }>
 					<ToggleControl
-						label={ __( 'Show "Clear all"', 'query-filter' ) }
+						label={ __( 'Afficher « Effacer tout »', 'up-gutenberg-query-filter' ) }
 						checked={ showClearAll }
 						onChange={ ( showClearAll ) => setAttributes( { showClearAll } ) }
 					/>
 					{ showClearAll && (
 						<TextControl
-							label={ __( 'Clear all label', 'query-filter' ) }
+							label={ __( 'Libellé « Effacer tout »', 'up-gutenberg-query-filter' ) }
 							value={ clearAllLabel }
 							onChange={ ( clearAllLabel ) => setAttributes( { clearAllLabel } ) }
 						/>
@@ -25,7 +25,7 @@ export default function Edit( { attributes, setAttributes } ) {
 			</InspectorControls>
 			<div { ...useBlockProps( { className: 'wp-block-query-filter-active-filters' } ) }>
 				<div className="wp-block-query-filter-active-filters__chips" aria-hidden>
-					<span className="wp-block-query-filter-chip is-placeholder">{ __( 'Les filtres actifs s\'afficheront ici…', 'query-filter' ) }</span>
+					<span className="wp-block-query-filter-chip is-placeholder">{ __( 'Les filtres actifs s\'afficheront ici…', 'up-gutenberg-query-filter' ) }</span>
 					{ showClearAll && (
 						<span className="wp-block-query-filter-chip is-clear">{ clearAllLabel }</span>
 					) }

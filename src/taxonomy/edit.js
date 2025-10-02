@@ -52,9 +52,9 @@ export default function Edit( { attributes, setAttributes } ) {
 	return (
 		<>
 			<InspectorControls>
-				<PanelBody title={ __( 'Taxonomy Settings', 'query-filter' ) }>
+				<PanelBody title={ __( 'Paramètres de taxonomie', 'up-gutenberg-query-filter' ) }>
 					<SelectControl
-						label={ __( 'Select Taxonomy', 'query-filter' ) }
+						label={ __( 'Choisir une taxonomie', 'up-gutenberg-query-filter' ) }
 						value={ taxonomy }
 						options={ ( taxonomies || [] ).map( ( taxonomy ) => ( {
 							label: taxonomy.name,
@@ -69,61 +69,61 @@ export default function Edit( { attributes, setAttributes } ) {
 						}
 					/>
 					<TextControl
-						label={ __( 'Label', 'query-filter' ) }
+						label={ __( 'Libellé', 'up-gutenberg-query-filter' ) }
 						value={ label }
-						help={ __( 'If empty then no label will be shown', 'query-filter' ) }
+						help={ __( 'Si vide, aucun libellé ne sera affiché', 'up-gutenberg-query-filter' ) }
 						onChange={ ( next ) => setAttributes( { label: next } ) }
 					/>
 					<ToggleControl
-						label={ __( 'Show Label', 'query-filter' ) }
+						label={ __( 'Afficher le libellé', 'up-gutenberg-query-filter' ) }
 						checked={ !! showLabel }
 						onChange={ ( next ) => setAttributes( { showLabel: next } ) }
 					/>
 					<ToggleControl
-						label={ __( 'Show Reset Button', 'query-filter' ) }
+						label={ __( 'Afficher le bouton "Tous"', 'up-gutenberg-query-filter' ) }
 						checked={ !! showResetButton }
-						help={ __( 'Show or hide the "All" reset button', 'query-filter' ) }
+						help={ __( 'Afficher ou masquer le bouton "Tous"', 'up-gutenberg-query-filter' ) }
 						onChange={ ( next ) => setAttributes( { showResetButton: next } ) }
 					/>
 					{ showResetButton && (
 						<SelectControl
-							label={ __( 'Reset Button Position', 'query-filter' ) }
+							label={ __( 'Position du bouton de réinitialisation', 'up-gutenberg-query-filter' ) }
 							value={ resetPosition }
 							options={ [
-								{ label: __( 'Before terms', 'query-filter' ), value: 'before' },
-								{ label: __( 'After terms', 'query-filter' ), value: 'after' },
+								{ label: __( 'Avant les termes', 'up-gutenberg-query-filter' ), value: 'before' },
+								{ label: __( 'Après les termes', 'up-gutenberg-query-filter' ), value: 'after' },
 							] }
 							onChange={ ( next ) => setAttributes( { resetPosition: next } ) }
 						/>
 					) }
 					<SelectControl
-						label={ __( 'Operator (multi-select)', 'query-filter' ) }
+						label={ __( 'Opérateur (multi-sélection)', 'up-gutenberg-query-filter' ) }
 						value={ operator }
 						options={ [
-							{ label: __( 'OR (IN)', 'query-filter' ), value: 'IN' },
-							{ label: __( 'AND', 'query-filter' ), value: 'AND' },
+							{ label: __( 'OU (IN)', 'up-gutenberg-query-filter' ), value: 'IN' },
+							{ label: __( 'ET', 'up-gutenberg-query-filter' ), value: 'AND' },
 						] }
-						help={ __( 'Comment combiner plusieurs termes: OU (IN) ou ET (AND).', 'query-filter' ) }
+						help={ __( 'Comment combiner plusieurs termes : OU (IN) ou ET (AND).', 'up-gutenberg-query-filter' ) }
 						onChange={ ( next ) => setAttributes( { operator: next } ) }
 					/>
 					{ showResetButton && (
 						<TextControl
-							label={ __( 'Empty Choice Label', 'query-filter' ) }
+							label={ __( 'Libellé pour "Tous"', 'up-gutenberg-query-filter' ) }
 							value={ emptyLabel }
-							placeholder={ __( 'All', 'query-filter' ) }
+							placeholder={ __( 'Tous', 'up-gutenberg-query-filter' ) }
 							onChange={ ( next ) => setAttributes( { emptyLabel: next } ) }
 						/>
 					) }
 					<ToggleControl
-						label={ __( 'Hide zero-result terms', 'query-filter' ) }
+						label={ __( 'Masquer les termes à 0 résultat', 'up-gutenberg-query-filter' ) }
 						checked={ !! hideZeroCountTerms }
-						help={ __( 'Hide terms that would currently return 0 posts (unchecked terms only).', 'query-filter' ) }
+						help={ __( 'Masquer les termes qui retourneraient 0 résultats (hors cases cochées).', 'up-gutenberg-query-filter' ) }
 						onChange={ ( next ) => setAttributes( { hideZeroCountTerms: next } ) }
 					/>
 					<ToggleControl
-						label={ __( 'Show counts next to terms', 'query-filter' ) }
+						label={ __( 'Afficher les compteurs à côté des termes', 'up-gutenberg-query-filter' ) }
 						checked={ !! showCounts }
-						help={ __( 'Display the number of matching posts next to each term.', 'query-filter' ) }
+						help={ __( 'Afficher le nombre d’éléments correspondant pour chaque terme.', 'up-gutenberg-query-filter' ) }
 						onChange={ ( next ) => setAttributes( { showCounts: next } ) }
 					/>
 				</PanelBody>
@@ -140,7 +140,7 @@ export default function Edit( { attributes, setAttributes } ) {
 				>
 					{ showResetButton && (
 						<option>
-							{ emptyLabel || __( 'All', 'query-filter' ) }
+							{ emptyLabel || __( 'Tous', 'up-gutenberg-query-filter' ) }
 						</option>
 					) }
 					{ terms.map( ( term ) => (

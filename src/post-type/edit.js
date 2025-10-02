@@ -37,28 +37,25 @@ export default function Edit( { attributes, setAttributes, context } ) {
 	return (
 		<>
 			<InspectorControls>
-				<PanelBody title={ __( 'Post Type Settings', 'query-filter' ) }>
+				<PanelBody title={ __( 'Paramètres du type de contenu', 'up-gutenberg-query-filter' ) }>
 					<TextControl
-						label={ __( 'Label', 'query-filter' ) }
+						label={ __( 'Libellé', 'up-gutenberg-query-filter' ) }
 						value={ label }
-						defaultValue={ __( 'Content Type', 'query-filter' ) }
-						help={ __(
-							'If empty then no label will be shown',
-							'query-filter'
-						) }
+						defaultValue={ __( 'Type de contenu', 'up-gutenberg-query-filter' ) }
+						help={ __( 'Si vide, aucun libellé ne sera affiché', 'up-gutenberg-query-filter' ) }
 						onChange={ ( label ) => setAttributes( { label } ) }
 					/>
 					<ToggleControl
-						label={ __( 'Show Label', 'query-filter' ) }
+						label={ __( 'Afficher le libellé', 'up-gutenberg-query-filter' ) }
 						checked={ showLabel }
 						onChange={ ( showLabel ) =>
 							setAttributes( { showLabel } )
 						}
 					/>
 					<TextControl
-						label={ __( 'Empty Choice Label', 'query-filter' ) }
+						label={ __( 'Libellé pour "Tous"', 'up-gutenberg-query-filter' ) }
 						value={ emptyLabel }
-						placeholder={ __( 'All', 'query-filter' ) }
+						placeholder={ __( 'Tous', 'up-gutenberg-query-filter' ) }
 						onChange={ ( emptyLabel ) =>
 							setAttributes( { emptyLabel } )
 						}
@@ -68,7 +65,7 @@ export default function Edit( { attributes, setAttributes, context } ) {
 			<div { ...useBlockProps( { className: 'wp-block-query-filter' } ) }>
 				{ showLabel && (
 					<label className="wp-block-query-filter-post-type__label wp-block-query-filter__label">
-						{ label || __( 'Content Type', 'query-filter' ) }
+						{ label || __( 'Type de contenu', 'up-gutenberg-query-filter' ) }
 					</label>
 				) }
 				<select
@@ -76,7 +73,7 @@ export default function Edit( { attributes, setAttributes, context } ) {
 					inert
 				>
 					<option>
-						{ emptyLabel || __( 'All', 'query-filter' ) }
+						{ emptyLabel || __( 'Tous', 'up-gutenberg-query-filter' ) }
 					</option>
 					{ postTypes.map( ( type ) => (
 						<option key={ type.slug }>{ type.name }</option>

@@ -10,17 +10,17 @@ use WP_HTML_Tag_Processor;
 use WP_Query;
 
 /**
- * Connect namespace methods to hooks and filters.
  *
  * @return void
  */
 function bootstrap() : void {
 	// General hooks.
-	add_filter( 'query_loop_block_query_vars', __NAMESPACE__ . '\\filter_query_loop_block_query_vars', 10, 3 );
-	add_action( 'pre_get_posts', __NAMESPACE__ . '\\pre_get_posts_transpose_query_vars' );
-	add_filter( 'block_type_metadata', __NAMESPACE__ . '\\filter_block_type_metadata', 10 );
-	add_action( 'init', __NAMESPACE__ . '\\register_blocks' );
-	add_action( 'enqueue_block_assets', __NAMESPACE__ . '\\action_wp_enqueue_scripts' );
+	add_action( 'init', __NAMESPACE__ . '\load_textdomain' );
+	add_filter( 'query_loop_block_query_vars', __NAMESPACE__ . '\filter_query_loop_block_query_vars', 10, 3 );
+	add_action( 'pre_get_posts', __NAMESPACE__ . '\pre_get_posts_transpose_query_vars' );
+	add_filter( 'block_type_metadata', __NAMESPACE__ . '\filter_block_type_metadata', 10 );
+	add_action( 'init', __NAMESPACE__ . '\register_blocks' );
+	add_action( 'enqueue_block_assets', __NAMESPACE__ . '\action_wp_enqueue_scripts' );
 
 	// Search.
 	add_filter( 'render_block_core/search', __NAMESPACE__ . '\\render_block_search', 10, 3 );
@@ -30,6 +30,17 @@ function bootstrap() : void {
 
 	// REST API.
 	add_action( 'rest_api_init', __NAMESPACE__ . '\\register_rest_routes' );
+}
+
+/**
+ * Load translations.
+ */
+function load_textdomain() : void {
+    load_plugin_textdomain(
+        'up-gutenberg-query-filter',
+        false,
+        dirname( plugin_basename( PLUGIN_FILE ) ) . '/languages'
+    );
 }
 
 /**

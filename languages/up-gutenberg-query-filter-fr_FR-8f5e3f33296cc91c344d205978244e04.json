@@ -1,0 +1,18 @@
+{
+    "translation-revision-date": "2025-10-02 11:29+0000",
+    "generator": "WP-CLI\/2.6.0",
+    "source": "src\/taxonomy\/edit.js",
+    "domain": "messages",
+    "locale_data": {
+        "messages": {
+            "": {
+                "domain": "messages",
+                "lang": "fr_FR",
+                "plural-forms": "nplurals=2; plural=(n != 1);"
+            },
+            "Display the number of matching posts next to each term.": [
+                "Afficher le nombre d\u2019\u00e9l\u00e9ments correspondant pour chaque terme."
+            ]
+        }
+    }
+}

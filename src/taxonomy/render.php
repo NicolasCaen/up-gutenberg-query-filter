@@ -59,7 +59,7 @@ $show_counts       = $attributes['showCounts'] ?? false;
 		?>
 		<?php if ( $show_reset_button && $reset_position === 'before' ) : ?>
 			<button type="button" class="wp-block-query-filter__reset" data-wp-on--click="actions.clearTerms">
-				<?php echo esc_html( $attributes['emptyLabel'] ?: __( 'All', 'query-filter' ) ); ?>
+				<?php echo esc_html( $attributes['emptyLabel'] ?: __( 'All', 'up-gutenberg-query-filter' ) ); ?>
 			</button>
 		<?php endif; ?>
 		<?php foreach ( $terms as $term ) :
@@ -80,7 +80,7 @@ $show_counts       = $attributes['showCounts'] ?? false;
 		<?php endforeach; ?>
 		<?php if ( $show_reset_button && $reset_position === 'after' ) : ?>
 			<button type="button" class="wp-block-query-filter__reset" data-wp-on--click="actions.clearTerms">
-				<?php echo esc_html( $attributes['emptyLabel'] ?: __( 'All', 'query-filter' ) ); ?>
+				<?php echo esc_html( $attributes['emptyLabel'] ?: __( 'All', 'up-gutenberg-query-filter' ) ); ?>
 			</button>
 		<?php endif; ?>
 	</div>
