@@ -63,6 +63,7 @@ const updateTermsVisibility = async ( changedContainer ) => {
         const queryId = container.dataset.queryId || 0;
         const postType = container.dataset.postType || 'post';
         const hideZero = (container.dataset.hideZeroTerms || 'true') === 'true';
+        const markInactive = (container.dataset.markZeroInactive || 'false') === 'true';
         const showCounts = (container.dataset.showCounts || 'false') === 'true';
         
         // Build filters excluding current taxonomy
@@ -94,8 +95,15 @@ const updateTermsVisibility = async ( changedContainer ) => {
                     // Visibility based on setting
                     if ( hideZero && termData.count === 0 && ! checkbox.checked ) {
                         termEl.style.display = 'none';
+                        termEl.classList.remove( 'inactive' );
                     } else {
                         termEl.style.display = '';
+                        // Independently toggle the inactive class if enabled
+                        if ( markInactive && termData.count === 0 && ! checkbox.checked ) {
+                            termEl.classList.add( 'inactive' );
+                        } else {
+                            termEl.classList.remove( 'inactive' );
+                        }
                     }
 
                     // Update label with counts if enabled

@@ -84,6 +84,10 @@
       "type": "boolean",
       "default": true
     },
+    "markZeroCountInactive": {
+      "type": "boolean",
+      "default": false
+    },
     "showCounts": {
       "type": "boolean",
       "default": false

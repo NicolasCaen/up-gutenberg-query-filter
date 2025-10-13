@@ -18,6 +18,7 @@ export default function Edit( { attributes, setAttributes } ) {
 		operator = 'IN',
 		resetPosition = 'before',
 		hideZeroCountTerms = true,
+		markZeroCountInactive = false,
 		showCounts = false,
 	} = attributes;
 
@@ -119,6 +120,12 @@ export default function Edit( { attributes, setAttributes } ) {
 						checked={ !! hideZeroCountTerms }
 						help={ __( 'Masquer les termes qui retourneraient 0 résultats (hors cases cochées).', 'up-gutenberg-query-filter' ) }
 						onChange={ ( next ) => setAttributes( { hideZeroCountTerms: next } ) }
+					/>
+					<ToggleControl
+						label={ __( "Ajouter la classe 'inactive' aux termes à 0 résultat", 'up-gutenberg-query-filter' ) }
+						checked={ !! markZeroCountInactive }
+						help={ __( 'Quand activé, les termes à 0 résultat restent visibles avec une classe CSS pour les styliser.', 'up-gutenberg-query-filter' ) }
+						onChange={ ( next ) => setAttributes( { markZeroCountInactive: next } ) }
 					/>
 					<ToggleControl
 						label={ __( 'Afficher les compteurs à côté des termes', 'up-gutenberg-query-filter' ) }
