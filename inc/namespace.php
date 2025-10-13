@@ -319,6 +319,22 @@ function register_rest_routes() : void {
 				'default' => 'post',
 				'sanitize_callback' => 'sanitize_text_field',
 			],
+			'use_archive' => [
+				'required' => false,
+				'type' => 'boolean',
+				'default' => false,
+			],
+			'archive_term_id' => [
+				'required' => false,
+				'type' => 'integer',
+				'default' => 0,
+			],
+			'archive_taxonomy' => [
+				'required' => false,
+				'type' => 'string',
+				'default' => '',
+				'sanitize_callback' => 'sanitize_text_field',
+			],
 			'filters' => [
 				'required' => false,
 				'type' => 'string',
@@ -339,6 +355,9 @@ function get_available_terms( \WP_REST_Request $request ) {
 	$query_id = $request->get_param( 'query_id' );
 	$post_type = $request->get_param( 'post_type' );
 	$filters_param = $request->get_param( 'filters' );
+	$use_archive = (bool) $request->get_param( 'use_archive' );
+	$archive_term_id = (int) $request->get_param( 'archive_term_id' );
+	$archive_taxonomy = $request->get_param( 'archive_taxonomy' );
 
 	if ( ! taxonomy_exists( $taxonomy ) ) {
 		return new \WP_Error( 'invalid_taxonomy', 'Invalid taxonomy', [ 'status' => 400 ] );
@@ -367,6 +386,26 @@ function get_available_terms( \WP_REST_Request $request ) {
 				'terms'    => $slugs,
 				'field'    => 'slug',
 				'operator' => $filter_data['operator'] ?? 'IN',
+			];
+		}
+	}
+
+	// If requested and archive term info provided, scope to the archive term
+	if ( $use_archive && $archive_term_id > 0 && ! empty( $archive_taxonomy ) && taxonomy_exists( $archive_taxonomy ) ) {
+		// Only add if not already filtered by this taxonomy
+		$has_filter_for_tax = false;
+		foreach ( $tax_query as $clause ) {
+			if ( is_array( $clause ) && ( $clause['taxonomy'] ?? '' ) === $archive_taxonomy ) {
+				$has_filter_for_tax = true;
+				break;
+			}
+		}
+		if ( ! $has_filter_for_tax ) {
+			$tax_query[] = [
+				'taxonomy' => $archive_taxonomy,
+				'terms'    => [ $archive_term_id ],
+				'field'    => 'term_id',
+				'operator' => 'IN',
 			];
 		}
 	}

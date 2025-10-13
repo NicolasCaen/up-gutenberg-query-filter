@@ -24,6 +24,9 @@ const navigateTaxonomy = async ( baseUrl, queryVar, pageVar, value, operator ) =
     }
     // Reset pagination when changing filters
     url.searchParams.delete( pageVar );
+    // Debug navigation params
+    // eslint-disable-next-line no-console
+    console.debug('[qf] navigateTaxonomy', { baseUrl, queryVar, pageVar, value, operator, url: url.toString() });
     const { actions } = await import( '@wordpress/interactivity-router' );
     await actions.navigate( url.toString() );
 };
@@ -65,21 +68,29 @@ const updateTermsVisibility = async ( changedContainer ) => {
         const hideZero = (container.dataset.hideZeroTerms || 'true') === 'true';
         const markInactive = (container.dataset.markZeroInactive || 'false') === 'true';
         const showCounts = (container.dataset.showCounts || 'false') === 'true';
+        const useArchive = (container.dataset.useArchiveTerm || 'false') === 'true';
+        const archiveTermId = parseInt(container.dataset.archiveTermId || '0', 10);
+        const archiveTaxonomy = container.dataset.archiveTaxonomy || '';
         
         // Build filters excluding current taxonomy
         const filtersForRequest = { ...currentFilters };
         delete filtersForRequest[ taxonomy ];
         
         try {
-            const response = await fetch(
-                `/wp-json/query-filter/v1/available-terms?taxonomy=${ taxonomy }&query_id=${ queryId }&post_type=${ postType }&filters=${ encodeURIComponent( JSON.stringify( filtersForRequest ) ) }`
-            );
+            const fetchUrl = `/wp-json/query-filter/v1/available-terms?taxonomy=${ taxonomy }&query_id=${ queryId }&post_type=${ postType }&use_archive=${ useArchive ? '1' : '0' }&archive_term_id=${ archiveTermId }&archive_taxonomy=${ encodeURIComponent( archiveTaxonomy ) }&filters=${ encodeURIComponent( JSON.stringify( filtersForRequest ) ) }`;
+            // eslint-disable-next-line no-console
+            console.debug('[qf] fetch available-terms', { taxonomy, queryId, postType, useArchive, archiveTermId, archiveTaxonomy, filtersForRequest, fetchUrl });
+            const response = await fetch( fetchUrl );
             
             if ( ! response.ok ) {
+                // eslint-disable-next-line no-console
+                console.debug('[qf] fetch not ok', response.status, response.statusText);
                 continue;
             }
             
             const data = await response.json();
+            // eslint-disable-next-line no-console
+            console.debug('[qf] available-terms data', data);
             
             // Update visibility of terms
             const termElements = container.querySelectorAll( '.wp-block-query-filter__term' );
@@ -92,18 +103,23 @@ const updateTermsVisibility = async ( changedContainer ) => {
                 const label = termEl.querySelector( 'label' );
                 
                 if ( termData ) {
-                    // Visibility based on setting
-                    if ( hideZero && termData.count === 0 && ! checkbox.checked ) {
-                        termEl.style.display = 'none';
-                        termEl.classList.remove( 'inactive' );
-                    } else {
-                        termEl.style.display = '';
-                        // Independently toggle the inactive class if enabled
-                        if ( markInactive && termData.count === 0 && ! checkbox.checked ) {
+                    const isZeroAndUnchecked = termData.count === 0 && ! checkbox.checked;
+
+                    // Inactive takes precedence over hide
+                    if ( isZeroAndUnchecked ) {
+                        if ( markInactive ) {
+                            termEl.style.display = '';
                             termEl.classList.add( 'inactive' );
+                        } else if ( hideZero ) {
+                            termEl.style.display = 'none';
+                            termEl.classList.remove( 'inactive' );
                         } else {
+                            termEl.style.display = '';
                             termEl.classList.remove( 'inactive' );
                         }
+                    } else {
+                        termEl.style.display = '';
+                        termEl.classList.remove( 'inactive' );
                     }
 
                     // Update label with counts if enabled
@@ -158,6 +174,8 @@ const { state } = store( 'query-filter', {
             const queryVar = container.dataset.queryVar;
             const pageVar = container.dataset.pageVar;
             const operator = container.dataset.operator || 'IN';
+            // eslint-disable-next-line no-console
+            console.debug('[qf] toggleTerm', { values, baseUrl, queryVar, pageVar, operator });
             
             // Update terms visibility before navigation
             yield updateTermsVisibility( container );
@@ -175,6 +193,8 @@ const { state } = store( 'query-filter', {
                 .querySelectorAll( '.wp-block-query-filter__checkbox:checked' )
                 .forEach( ( el ) => ( el.checked = false ) );
             const operator = container.dataset.operator || 'IN';
+            // eslint-disable-next-line no-console
+            console.debug('[qf] clearTerms', { baseUrl, queryVar, pageVar, operator });
             
             // Update terms visibility after clearing
             yield updateTermsVisibility( container );
