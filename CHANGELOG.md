@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.4] - 2025-10-13
+
+- Fix counts on taxonomy archives and first-click issues
+  - Archive scoping for REST: pass `archive_term_id` and `archive_taxonomy` so counts reflect current archive term.
+  - Server-render initial counts in `src/taxonomy/render.php` (prevents Interactivity API from removing them on first update).
+  - Front-end updates only the dedicated `<span class="term-count">` to avoid label resets and duplicate counts.
+  - No more disappearing counts on the first click, no `(n) (n)` duplicates.
+
 ## [1.1.3] - 2025-10-02
 
 - Enhancements to Taxonomy Filter block
