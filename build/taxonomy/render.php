@@ -75,6 +75,20 @@ $reset_position    = $attributes['resetPosition'] ?? 'before'; // 'before' or 'a
 $hide_zero_terms       = $attributes['hideZeroCountTerms'] ?? true;
 $mark_zero_inactive    = $attributes['markZeroCountInactive'] ?? false;
 $show_counts           = $attributes['showCounts'] ?? false;
+
+// Calculate initial counts if showCounts is enabled
+$term_counts = [];
+if ( $show_counts && $use_archive_term && ! empty( $object_ids ) ) {
+	foreach ( $terms as $term ) {
+		$count = 0;
+		foreach ( $object_ids as $post_id ) {
+			if ( has_term( $term->term_id, $attributes['taxonomy'], $post_id ) ) {
+				$count++;
+			}
+		}
+		$term_counts[ $term->term_id ] = $count;
+	}
+}
 ?>
 
 <div 
@@ -121,7 +135,7 @@ $show_counts           = $attributes['showCounts'] ?? false;
 		$input_id = $id . '-' . $term->term_id;
 		$checked = in_array( $term->slug, $current, true );
 	?>
-		<div class="wp-block-query-filter__term">
+		<div class="wp-block-query-filter__term" data-term-slug="<?php echo esc_attr( $term->slug ); ?>">
 			<input
 				type="checkbox"
 				class="wp-block-query-filter__checkbox"
@@ -130,7 +144,13 @@ $show_counts           = $attributes['showCounts'] ?? false;
 				data-wp-on--change="actions.toggleTerm"
 				<?php checked( $checked ); ?>
 			/>
-			<label for="<?php echo esc_attr( $input_id ); ?>" data-name="<?php echo esc_attr( $term->name ); ?>"><?php echo esc_html( $term->name ); ?></label>
+			<label for="<?php echo esc_attr( $input_id ); ?>">
+				<span class="term-name"><?php echo esc_html( $term->name ); ?></span><span class="term-count"><?php 
+					if ( $show_counts && isset( $term_counts[ $term->term_id ] ) ) {
+						echo ' (' . $term_counts[ $term->term_id ] . ')';
+					}
+				?></span>
+			</label>
 		</div>
 	<?php endforeach; ?>
 

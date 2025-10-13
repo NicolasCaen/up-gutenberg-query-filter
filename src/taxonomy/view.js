@@ -100,7 +100,6 @@ const updateTermsVisibility = async ( changedContainer ) => {
                 
                 const termSlug = checkbox.value;
                 const termData = data.terms.find( ( t ) => t.slug === termSlug );
-                const label = termEl.querySelector( 'label' );
                 
                 if ( termData ) {
                     const isZeroAndUnchecked = termData.count === 0 && ! checkbox.checked;
@@ -122,10 +121,12 @@ const updateTermsVisibility = async ( changedContainer ) => {
                         termEl.classList.remove( 'inactive' );
                     }
 
-                    // Update label with counts if enabled
-                    if ( label ) {
-                        const baseName = label.getAttribute( 'data-name' ) || label.textContent;
-                        label.textContent = showCounts ? `${ baseName } (${ termData.count })` : baseName;
+                    // Update count span if enabled
+                    const countSpan = termEl.querySelector( '.term-count' );
+                    if ( countSpan ) {
+                        countSpan.textContent = showCounts ? ` (${ termData.count })` : '';
+                        // eslint-disable-next-line no-console
+                        console.debug('[qf] update count', { termSlug, showCounts, count: termData.count, text: countSpan.textContent });
                     }
                 }
             } );
