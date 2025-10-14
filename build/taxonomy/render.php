@@ -78,9 +78,9 @@ $hide_zero_terms       = $attributes['hideZeroCountTerms'] ?? true;
 $mark_zero_inactive    = $attributes['markZeroCountInactive'] ?? false;
 $show_counts           = $attributes['showCounts'] ?? false;
 
-// Calculate initial counts if showCounts is enabled
+// Calculate initial counts if showCounts is enabled and we have object_ids
 $term_counts = [];
-if ( $show_counts && $use_archive_term && ! empty( $object_ids ) ) {
+if ( $show_counts && ! empty( $object_ids ) ) {
 	foreach ( $terms as $term ) {
 		$count = 0;
 		foreach ( $object_ids as $post_id ) {

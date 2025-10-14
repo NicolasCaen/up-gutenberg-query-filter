@@ -121,10 +121,10 @@ const updateTermsVisibility = async ( changedContainer ) => {
                             termEl.appendChild( countSpan );
                         }
                     }
-                    // Always reset then set to avoid accidental duplication
-                    countSpan.textContent = '';
-                    if ( showCounts ) {
-                        countSpan.textContent = ` (${ termData.count })`;
+                    // Update count only if different to avoid duplication
+                    const expectedText = showCounts ? ` (${ termData.count })` : '';
+                    if ( countSpan.textContent !== expectedText ) {
+                        countSpan.textContent = expectedText;
                     }
                     // eslint-disable-next-line no-console
                     console.debug('[qf] update count', { termSlug, showCounts, count: termData.count, text: countSpan.textContent });
