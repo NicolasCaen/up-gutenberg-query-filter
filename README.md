@@ -3,7 +3,7 @@
 Plugin WordPress ajoutant des blocs de filtres pour le bloc « Boucle de requête » (Query Loop), avec l'API d'interactivité de Gutenberg.
 
 - Auteur: Upcoder
-- Version: 1.1.4
+- Version: 1.1.6
 - Text Domain: `up-gutenberg-query-filter`
 - Namespace PHP: `up\query_loop_filter`
 
@@ -68,6 +68,18 @@ Les sources sont dans `src/` et sont copiées/minifiées dans `build/` lors du b
 - PHP ≥ 8.0
 
 ## Journal des modifications
+### 1.1.6 — 2025-10-14
+- **Performance**: optimisation du chargement initial pour les requêtes personnalisées (non-héritées) avec Custom Post Type.
+  - Les termes vides (sans posts associés au CPT spécifié) ne sont plus chargés au lancement de la page.
+  - Réduction du DOM initial et amélioration des performances de rendu.
+  - Implémentation dans `src/taxonomy/render.php` via filtrage par `object_ids`.
+
+### 1.1.5 — 2025-10-14
+- **Correctifs multiples**:
+  - Correction du marquage "inactive" pour les termes à count zéro sur les pages non-archive (fallback client dans `src/taxonomy/view.js`).
+  - Élimination des doublons de compteurs "(0) (0)" en dédupliquant les spans `.term-count`.
+  - Amélioration de la robustesse du calcul des compteurs.
+
 ### 1.1.4 — 2025-10-13
 - Correctifs d'affichage des compteurs sur archive et premier clic:
   - Passage explicite du terme d'archive via REST (`archive_term_id`, `archive_taxonomy`) pour des compteurs cohérents.

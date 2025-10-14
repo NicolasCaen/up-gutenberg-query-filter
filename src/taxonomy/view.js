@@ -103,9 +103,15 @@ const updateTermsVisibility = async ( changedContainer ) => {
                 
                 if ( termData ) {
                     // Update count span FIRST (always update, visibility controlled by showCounts)
-                    let countSpan = termEl.querySelector( '.term-count' );
+                    // Ensure there is exactly one .term-count, remove extras if any
+                    const countSpans = termEl.querySelectorAll( '.term-count' );
+                    let countSpan = countSpans[0] || null;
+                    if ( countSpans.length > 1 ) {
+                        for ( let i = 1; i < countSpans.length; i++ ) {
+                            countSpans[i].remove();
+                        }
+                    }
                     if ( ! countSpan ) {
-                        // Ensure a count span exists to avoid stale server markup
                         const label = termEl.querySelector( 'label' );
                         countSpan = document.createElement( 'span' );
                         countSpan.className = 'term-count';
@@ -115,7 +121,11 @@ const updateTermsVisibility = async ( changedContainer ) => {
                             termEl.appendChild( countSpan );
                         }
                     }
-                    countSpan.textContent = showCounts ? ` (${ termData.count })` : '';
+                    // Always reset then set to avoid accidental duplication
+                    countSpan.textContent = '';
+                    if ( showCounts ) {
+                        countSpan.textContent = ` (${ termData.count })`;
+                    }
                     // eslint-disable-next-line no-console
                     console.debug('[qf] update count', { termSlug, showCounts, count: termData.count, text: countSpan.textContent });
                     
@@ -142,6 +152,37 @@ const updateTermsVisibility = async ( changedContainer ) => {
                         }
                     } else {
                         termEl.style.display = '';
+                    }
+                }
+                // Fallback: if the API didn't return this term, rely on existing markup/data-count
+                else {
+                    const countAttr = termEl.getAttribute( 'data-count' );
+                    let count = null;
+                    if ( countAttr !== null && countAttr !== '' ) {
+                        count = parseInt( countAttr, 10 );
+                    } else {
+                        const countSpan = termEl.querySelector( '.term-count' );
+                        if ( countSpan && countSpan.textContent ) {
+                            const match = countSpan.textContent.match( /(\d+)/ );
+                            if ( match ) count = parseInt( match[1], 10 );
+                        }
+                    }
+
+                    if ( count !== null ) {
+                        // Align inactive class with current checkbox state
+                        if ( count === 0 && ! checkbox.checked ) {
+                            termEl.classList.add( 'inactive' );
+                            if ( markInactive ) {
+                                termEl.style.display = '';
+                            } else if ( hideZero ) {
+                                termEl.style.display = 'none';
+                            } else {
+                                termEl.style.display = '';
+                            }
+                        } else {
+                            termEl.classList.remove( 'inactive' );
+                            termEl.style.display = '';
+                        }
                     }
                 }
             } );

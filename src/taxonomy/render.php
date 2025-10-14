@@ -17,15 +17,14 @@ if ( empty( $block->context['query']['inherit'] ) ) {
     $base_url = str_replace( '/page/' . get_query_var( 'paged' ), '', remove_query_arg( [ $query_var, $page_var ] ) );
 }
 
-// Render ALL terms for the taxonomy (never remove on server). JS will hide/mark inactive.
 // Determine if we should scope to current archive term on initial render
 $use_archive_term = ! empty( $block->context['query']['inherit'] ) && ( is_category() || is_tax() );
 $archive_term_id = 0;
 $archive_taxonomy = '';
+$object_ids = [];
 
 if ( $use_archive_term ) {
     $queried = get_queried_object();
-    $object_ids = [];
     if ( $queried && ! is_wp_error( $queried ) && isset( $queried->taxonomy, $queried->term_id ) ) {
         $archive_term_id = $queried->term_id;
         $archive_taxonomy = $queried->taxonomy;
@@ -46,25 +45,28 @@ if ( $use_archive_term ) {
             ],
         ] );
     }
-
-    $terms = get_terms( [
-        'taxonomy'   => $attributes['taxonomy'],
-        'hide_empty' => false,
-        'number'     => 100,
-        'object_ids' => $object_ids,
-        'orderby'    => 'name',
-        'order'      => 'ASC',
-    ] );
 } else {
-    // Render ALL terms (JS will mark inactive/hide based on settings)
-    $terms = get_terms( [
-        'taxonomy'   => $attributes['taxonomy'],
-        'hide_empty' => false,
-        'number'     => 100,
-        'orderby'    => 'name',
-        'order'      => 'ASC',
+    // Custom query (non-inherited): scope terms to the query's post type
+    $post_type = $block->context['query']['postType'] ?? 'post';
+    $object_ids = get_posts( [
+        'post_type'              => $post_type,
+        'posts_per_page'         => -1,
+        'fields'                 => 'ids',
+        'no_found_rows'          => true,
+        'update_post_meta_cache' => false,
+        'update_post_term_cache' => false,
     ] );
 }
+
+// Always scope terms to object_ids to avoid loading irrelevant terms
+$terms = get_terms( [
+    'taxonomy'   => $attributes['taxonomy'],
+    'hide_empty' => false,
+    'number'     => 100,
+    'object_ids' => $object_ids,
+    'orderby'    => 'name',
+    'order'      => 'ASC',
+] );
 
 if ( is_wp_error( $terms ) || empty( $terms ) ) {
 	return;

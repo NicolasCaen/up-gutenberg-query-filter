@@ -2,9 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.6] - 2025-10-14
+
+- **Performance**: les termes vides (sans posts associés) ne sont plus chargés au lancement de la page pour les requêtes personnalisées (non-héritées) avec un Custom Post Type spécifique.
+  - Optimisation du rendu initial dans `src/taxonomy/render.php` : utilisation de `object_ids` pour filtrer les termes par post type.
+  - Réduit le DOM initial et améliore les performances de chargement.
+
 ## [1.1.5] - 2025-10-14
 
-- Scope: cette version fonctionne uniquement pour les pages de catégorie (archives de catégorie).
+- **Scope**: cette version fonctionne pour les pages de catégorie (archives de catégorie) et les requêtes personnalisées avec CPT.
+- **Performance**: dans une Query Loop personnalisée (non-héritée), seuls les termes associés au post type de la requête sont chargés au rendu initial (`src/taxonomy/render.php`).
+- **Fix**: correction du marquage "inactive" pour les termes à count zéro sur les pages non-archive (fallback client dans `src/taxonomy/view.js`).
+- **Fix**: élimination des doublons de compteurs "(0) (0)" en dédupliquant les spans `.term-count` et en réinitialisant `textContent` avant mise à jour (`src/taxonomy/view.js`).
 
 ## [1.1.4] - 2025-10-13
 
