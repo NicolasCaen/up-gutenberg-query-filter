@@ -220,10 +220,47 @@ const { state } = store( 'query-filter', {
     },
 } );
 
+// Prime missing data-count from server markup and align inactive classes
+const primeCountsFromMarkup = () => {
+    const containers = document.querySelectorAll( '[data-taxonomy]' );
+    containers.forEach( ( container ) => {
+        const markInactive = (container.dataset.markZeroInactive || 'false') === 'true';
+        const termElements = container.querySelectorAll( '.wp-block-query-filter__term' );
+        termElements.forEach( ( termEl ) => {
+            const checkbox = termEl.querySelector( '.wp-block-query-filter__checkbox' );
+            if ( ! checkbox ) return;
+            let dataCount = termEl.getAttribute( 'data-count' );
+            if ( dataCount === null || dataCount === '' ) {
+                // Try to read from the visible label if present
+                const countSpan = termEl.querySelector( '.term-count' );
+                if ( countSpan && countSpan.textContent ) {
+                    const match = countSpan.textContent.match( /(\d+)/ );
+                    if ( match ) {
+                        termEl.setAttribute( 'data-count', match[1] );
+                        dataCount = match[1];
+                    }
+                }
+            }
+            // If we now have a numeric count, align inactive class immediately
+            const numeric = dataCount !== null && dataCount !== '' ? parseInt( dataCount, 10 ) : null;
+            if ( numeric !== null ) {
+                if ( numeric === 0 && ! checkbox.checked ) {
+                    if ( markInactive ) termEl.classList.add( 'inactive' );
+                } else {
+                    termEl.classList.remove( 'inactive' );
+                }
+            }
+        } );
+    } );
+};
+
 // Initialize term visibility and counts on first load
 const initUpdate = () => {
     // Small timeout to ensure DOM is fully hydrated (for SSR/BlockEditor front-end)
     setTimeout( () => {
+        // Prime state from existing markup (useful on direct visits without query params)
+        primeCountsFromMarkup();
+        // Then fetch authoritative counts and finalize state
         updateTermsVisibility();
     }, 0 );
 };
