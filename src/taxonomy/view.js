@@ -254,14 +254,50 @@ const primeCountsFromMarkup = () => {
     } );
 };
 
+// Detect if the current URL has any query params used by our filters
+const hasAnyFilterParams = () => {
+    const params = new URLSearchParams( window.location.search );
+    const containers = document.querySelectorAll( '[data-taxonomy]' );
+    for ( const container of containers ) {
+        const queryVar = container.dataset.queryVar;
+        if ( queryVar && ( params.has( queryVar ) || params.has( `${ queryVar }-op` ) ) ) {
+            return true;
+        }
+    }
+    return false;
+};
+
+// Emulate a real click on the reset button so Interactivity actions (including navigation) run
+// Returns true if a reset button was found and clicked
+const triggerResetClickOnce = () => {
+    const containers = document.querySelectorAll( '[data-taxonomy]' );
+    // Prefer the first visible reset button to avoid duplicate navigations
+    for ( const container of containers ) {
+        const resetBtn = container.querySelector( '.wp-block-query-filter__reset' );
+        if ( resetBtn ) {
+            resetBtn.click();
+            return true;
+        }
+    }
+    return false;
+};
+
 // Initialize term visibility and counts on first load
 const initUpdate = () => {
-    // Small timeout to ensure DOM is fully hydrated (for SSR/BlockEditor front-end)
+    // Small timeout to ensure DOM is fully hydrated
     setTimeout( () => {
         // Prime state from existing markup (useful on direct visits without query params)
         primeCountsFromMarkup();
-        // Then fetch authoritative counts and finalize state
-        updateTermsVisibility();
+        if ( ! hasAnyFilterParams() ) {
+            // Trigger a real reset click; if none found, fallback to fetching counts
+            const clicked = triggerResetClickOnce();
+            if ( ! clicked ) {
+                updateTermsVisibility();
+            }
+        } else {
+            // Otherwise just fetch authoritative counts and finalize state
+            updateTermsVisibility();
+        }
     }, 0 );
 };
 
