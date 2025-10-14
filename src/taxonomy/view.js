@@ -102,23 +102,29 @@ const updateTermsVisibility = async ( changedContainer ) => {
                 const termData = data.terms.find( ( t ) => t.slug === termSlug );
                 
                 if ( termData ) {
+                    // Update data-count attribute (always in sync with visual count)
+                    termEl.setAttribute( 'data-count', termData.count );
+                    
                     const isZeroAndUnchecked = termData.count === 0 && ! checkbox.checked;
 
-                    // Inactive takes precedence over hide
+                    // Apply inactive class based on data-count='0'
+                    if ( termData.count === 0 ) {
+                        termEl.classList.add( 'inactive' );
+                    } else {
+                        termEl.classList.remove( 'inactive' );
+                    }
+
+                    // Handle visibility (inactive takes precedence over hide)
                     if ( isZeroAndUnchecked ) {
                         if ( markInactive ) {
                             termEl.style.display = '';
-                            termEl.classList.add( 'inactive' );
                         } else if ( hideZero ) {
                             termEl.style.display = 'none';
-                            termEl.classList.remove( 'inactive' );
                         } else {
                             termEl.style.display = '';
-                            termEl.classList.remove( 'inactive' );
                         }
                     } else {
                         termEl.style.display = '';
-                        termEl.classList.remove( 'inactive' );
                     }
 
                     // Update count span if enabled

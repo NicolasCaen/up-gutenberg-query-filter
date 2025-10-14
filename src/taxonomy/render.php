@@ -134,8 +134,10 @@ if ( $show_counts && $use_archive_term && ! empty( $object_ids ) ) {
 		$__seen_terms[ $term->term_id ] = true;
 		$input_id = $id . '-' . $term->term_id;
 		$checked = in_array( $term->slug, $current, true );
+		$initial_count = isset( $term_counts[ $term->term_id ] ) ? $term_counts[ $term->term_id ] : '';
+		$inactive_class = ( $initial_count === 0 && ! $checked ) ? ' inactive' : '';
 	?>
-		<div class="wp-block-query-filter__term" data-term-slug="<?php echo esc_attr( $term->slug ); ?>">
+		<div class="wp-block-query-filter__term<?php echo $inactive_class; ?>" data-term-slug="<?php echo esc_attr( $term->slug ); ?>"<?php if ( $initial_count !== '' ) echo ' data-count="' . esc_attr( $initial_count ) . '"'; ?>>
 			<input
 				type="checkbox"
 				class="wp-block-query-filter__checkbox"

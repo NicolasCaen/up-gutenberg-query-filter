@@ -19,3 +19,14 @@
 	margin: 0;
 	padding: 0;
 }
+
+/* Inactive terms (count = 0) - customize as needed */
+.wp-block-query-filter__term.inactive {
+	opacity: 0.5;
+	pointer-events: none;
+}
+
+/* You can also target terms by their data-count attribute:
+   .wp-block-query-filter__term[data-count="0"] { ... }
+   .wp-block-query-filter__term[data-count="1"] { ... }
+*/
