@@ -7,6 +7,10 @@ All notable changes to this project will be documented in this file.
 - **Performance**: les termes vides (sans posts associés) ne sont plus chargés au lancement de la page pour les requêtes personnalisées (non-héritées) avec un Custom Post Type spécifique.
   - Optimisation du rendu initial dans `src/taxonomy/render.php` : utilisation de `object_ids` pour filtrer les termes par post type.
   - Réduit le DOM initial et améliore les performances de chargement.
+- **Fix**: correction de la duplication des compteurs "(4) (4)" en vérifiant si le `textContent` est déjà correct avant de le modifier (`src/taxonomy/view.js`).
+- **Fix**: calcul des `$term_counts` pour les requêtes personnalisées (non seulement archives) quand `showCounts` est activé (`src/taxonomy/render.php`).
+- **Structure**: ajout d'un conteneur `<div class="wp-block-query-filter__terms">` autour de tous les termes pour faciliter le ciblage CSS (`src/taxonomy/render.php`).
+  - correction d'un bug de duplication de compteur dans `src/taxonomy/view.js`.
 
 ## [1.1.5] - 2025-10-14
 

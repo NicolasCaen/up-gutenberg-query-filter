@@ -127,6 +127,7 @@ if ( $show_counts && ! empty( $object_ids ) ) {
 		</button>
 	<?php endif; ?>
 
+	<div class="wp-block-query-filter__terms">
 	<?php
 	$__seen_terms = [];
 	foreach ( $terms as $term ) :
@@ -158,6 +159,7 @@ if ( $show_counts && ! empty( $object_ids ) ) {
 			</label>
 		</div>
 	<?php endforeach; ?>
+	</div>
 
 	<?php if ( $show_reset_button && $reset_position === 'after' ) : ?>
 		<button type="button" class="wp-block-query-filter__reset" data-wp-on--click="actions.clearTerms">
