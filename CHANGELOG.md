@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.5] - 2025-10-14
+
+- Scope: cette version fonctionne uniquement pour les pages de catégorie (archives de catégorie).
+
 ## [1.1.4] - 2025-10-13
 
 - Fix counts on taxonomy archives and first-click issues
