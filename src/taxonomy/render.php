@@ -148,8 +148,9 @@ if ( $show_counts && $use_archive_term && ! empty( $object_ids ) ) {
 			/>
 			<label for="<?php echo esc_attr( $input_id ); ?>">
 				<span class="term-name"><?php echo esc_html( $term->name ); ?></span><span class="term-count"><?php 
-					if ( $show_counts && isset( $term_counts[ $term->term_id ] ) ) {
-						echo ' (' . $term_counts[ $term->term_id ] . ')';
+					// Always output count if available, JS will update it dynamically
+					if ( isset( $term_counts[ $term->term_id ] ) ) {
+						echo $show_counts ? ' (' . $term_counts[ $term->term_id ] . ')' : '';
 					}
 				?></span>
 			</label>

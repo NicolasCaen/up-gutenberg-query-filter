@@ -102,13 +102,30 @@ const updateTermsVisibility = async ( changedContainer ) => {
                 const termData = data.terms.find( ( t ) => t.slug === termSlug );
                 
                 if ( termData ) {
+                    // Update count span FIRST (always update, visibility controlled by showCounts)
+                    let countSpan = termEl.querySelector( '.term-count' );
+                    if ( ! countSpan ) {
+                        // Ensure a count span exists to avoid stale server markup
+                        const label = termEl.querySelector( 'label' );
+                        countSpan = document.createElement( 'span' );
+                        countSpan.className = 'term-count';
+                        if ( label ) {
+                            label.appendChild( countSpan );
+                        } else {
+                            termEl.appendChild( countSpan );
+                        }
+                    }
+                    countSpan.textContent = showCounts ? ` (${ termData.count })` : '';
+                    // eslint-disable-next-line no-console
+                    console.debug('[qf] update count', { termSlug, showCounts, count: termData.count, text: countSpan.textContent });
+                    
                     // Update data-count attribute (always in sync with visual count)
                     termEl.setAttribute( 'data-count', termData.count );
                     
                     const isZeroAndUnchecked = termData.count === 0 && ! checkbox.checked;
 
-                    // Apply inactive class based on data-count='0'
-                    if ( termData.count === 0 ) {
+                    // Apply inactive class: never mark as inactive if the term is checked
+                    if ( termData.count === 0 && ! checkbox.checked ) {
                         termEl.classList.add( 'inactive' );
                     } else {
                         termEl.classList.remove( 'inactive' );
@@ -125,14 +142,6 @@ const updateTermsVisibility = async ( changedContainer ) => {
                         }
                     } else {
                         termEl.style.display = '';
-                    }
-
-                    // Update count span if enabled
-                    const countSpan = termEl.querySelector( '.term-count' );
-                    if ( countSpan ) {
-                        countSpan.textContent = showCounts ? ` (${ termData.count })` : '';
-                        // eslint-disable-next-line no-console
-                        console.debug('[qf] update count', { termSlug, showCounts, count: termData.count, text: countSpan.textContent });
                     }
                 }
             } );
