@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.1.0] - 2026-02-20
+
+- **Fix**: navigation SPA custom — les filtres successifs s'accumulent correctement dans l'URL (construction depuis `window.location.href` au lieu de `baseUrl`).
+- **Fix**: les clics sur les filtres après le premier swap DOM fonctionnent grâce à des listeners natifs en délégation sur `document` (phase capture), indépendants de WP Interactivity.
+- **Fix**: `updateTermsVisibility` déclenché après le swap DOM via l'événement `query-filter:navigated` (plus d'appel prématuré).
+- **Feat**: navigation Back/Forward navigateur gérée via `popstate` + `spaSwap` sans rechargement.
+- **Refactor**: `navigate()` remplacé par `spaSwap(url, pushUrl)` — fetch HTML, extraction de la région `[data-wp-router-region="query-filter"]`, swap `innerHTML`, `history.pushState`. Zéro dépendance au router WP Interactivity.
+
+## [2.0.1] - 2026-02-20
+
+- **Compatibility**: WordPress 6.9.x navigation adjustments to ensure the Query Loop refreshes when filters change.
+
 ## [1.1.6] - 2025-10-14
 
 - **Performance**: les termes vides (sans posts associés) ne sont plus chargés au lancement de la page pour les requêtes personnalisées (non-héritées) avec un Custom Post Type spécifique.

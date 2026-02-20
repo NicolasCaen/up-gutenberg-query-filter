@@ -1,5 +1,57 @@
 import { store, getElement } from '@wordpress/interactivity';
 
+const REGION_SELECTOR = '[data-wp-router-region="query-filter"]';
+
+// Core SPA swap: fetch url, extract region, replace DOM.
+// When pushUrl is true a new history entry is created; false for popstate.
+const spaSwap = async ( url, pushUrl = true ) => {
+    const region = document.querySelector( REGION_SELECTOR );
+    if ( ! region ) {
+        window.location.assign( url );
+        return;
+    }
+
+    try {
+        const response = await fetch( url, {
+            headers: { 'Accept': 'text/html' },
+            credentials: 'same-origin',
+        } );
+        if ( ! response.ok ) {
+            window.location.assign( url );
+            return;
+        }
+        const html = await response.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString( html, 'text/html' );
+        const newRegion = doc.querySelector( REGION_SELECTOR );
+
+        if ( ! newRegion ) {
+            window.location.assign( url );
+            return;
+        }
+
+        region.innerHTML = newRegion.innerHTML;
+
+        if ( pushUrl ) {
+            window.history.pushState( {}, '', url );
+        }
+
+        // Dispatch event so other scripts know the region was updated.
+        document.dispatchEvent( new Event( 'query-filter:navigated' ) );
+    } catch ( err ) {
+        console.error( '[qf] SPA navigate failed, falling back', err );
+        window.location.assign( url );
+    }
+};
+
+const navigate = async ( url ) => {
+    // Normalise both URLs before comparing to avoid false positives.
+    const target = new URL( url, window.location.origin );
+    const current = new URL( window.location.href );
+    if ( target.href === current.href ) return;
+    await spaSwap( url, true );
+};
+
 const updateURL = async ( action, value, name ) => {
     const url = new URL( action );
     if ( value || name === 's' ) {
@@ -7,12 +59,33 @@ const updateURL = async ( action, value, name ) => {
     } else {
         url.searchParams.delete( name );
     }
-    const { actions } = await import( '@wordpress/interactivity-router' );
-    await actions.navigate( url.toString() );
+    await navigate( url.toString() );
+};
+
+const pendingNavigation = new WeakMap();
+
+const scheduleNavigateTaxonomy = ( container, delayMs = 150 ) => {
+    const baseUrl = container.dataset.baseUrl;
+    const queryVar = container.dataset.queryVar;
+    const pageVar = container.dataset.pageVar;
+    const operator = container.dataset.operator || 'IN';
+
+    const prev = pendingNavigation.get( container );
+    if ( prev?.timer ) {
+        clearTimeout( prev.timer );
+    }
+
+    const timer = setTimeout( () => {
+        const values = getSelectedValues( container );
+        navigateTaxonomy( baseUrl, queryVar, pageVar, values, operator );
+    }, delayMs );
+
+    pendingNavigation.set( container, { timer } );
 };
 
 const navigateTaxonomy = async ( baseUrl, queryVar, pageVar, value, operator ) => {
-    const url = new URL( baseUrl, window.location.origin );
+    // Start from current URL to preserve other active filters, then patch only this taxonomy's param.
+    const url = new URL( window.location.href );
     if ( value && value.length ) {
         url.searchParams.set( queryVar, value.join( ',' ) );
         if ( operator ) {
@@ -24,11 +97,9 @@ const navigateTaxonomy = async ( baseUrl, queryVar, pageVar, value, operator ) =
     }
     // Reset pagination when changing filters
     url.searchParams.delete( pageVar );
-    // Debug navigation params
     // eslint-disable-next-line no-console
     console.debug('[qf] navigateTaxonomy', { baseUrl, queryVar, pageVar, value, operator, url: url.toString() });
-    const { actions } = await import( '@wordpress/interactivity-router' );
-    await actions.navigate( url.toString() );
+    await spaSwap( url.toString(), true );
 };
 
 const getContainer = ( node ) => node.closest( '[data-base-url]' );
@@ -196,10 +267,7 @@ const { state } = store( 'query-filter', {
     actions: {
         *navigate( e ) {
             e.preventDefault();
-            const { actions } = yield import(
-                '@wordpress/interactivity-router'
-            );
-            yield actions.navigate( e.target.value );
+            yield navigate( e.target.value );
         },
         *search( e ) {
             e.preventDefault();
@@ -223,40 +291,11 @@ const { state } = store( 'query-filter', {
 
             yield updateURL( action, value, name );
         },
-        *toggleTerm( e ) {
-            const { ref } = getElement();
-            const container = getContainer( ref );
-            const values = getSelectedValues( container );
-            const baseUrl = container.dataset.baseUrl;
-            const queryVar = container.dataset.queryVar;
-            const pageVar = container.dataset.pageVar;
-            const operator = container.dataset.operator || 'IN';
-            // eslint-disable-next-line no-console
-            console.debug('[qf] toggleTerm', { values, baseUrl, queryVar, pageVar, operator });
-            
-            // Update terms visibility before navigation
-            yield updateTermsVisibility( container );
-            
-            yield navigateTaxonomy( baseUrl, queryVar, pageVar, values, operator );
+        *toggleTerm() {
+            // Handled by native delegated listener on document.
         },
         *clearTerms() {
-            const { ref } = getElement();
-            const container = getContainer( ref );
-            const baseUrl = container.dataset.baseUrl;
-            const queryVar = container.dataset.queryVar;
-            const pageVar = container.dataset.pageVar;
-            // Uncheck all
-            container
-                .querySelectorAll( '.wp-block-query-filter__checkbox:checked' )
-                .forEach( ( el ) => ( el.checked = false ) );
-            const operator = container.dataset.operator || 'IN';
-            // eslint-disable-next-line no-console
-            console.debug('[qf] clearTerms', { baseUrl, queryVar, pageVar, operator });
-            
-            // Update terms visibility after clearing
-            yield updateTermsVisibility( container );
-            
-            yield navigateTaxonomy( baseUrl, queryVar, pageVar, [], operator );
+            // Handled by native delegated listener on document.
         },
     },
 } );
@@ -323,22 +362,42 @@ const triggerResetClickOnce = () => {
     return false;
 };
 
+// Native delegated listeners — survive any DOM swap, no WP Interactivity dependency.
+// Use capture phase to fire before WP Interactivity's own handlers.
+document.addEventListener( 'change', ( e ) => {
+    const checkbox = e.target.closest( '.wp-block-query-filter__checkbox' );
+    if ( ! checkbox ) return;
+    const container = getContainer( checkbox );
+    if ( ! container ) return;
+    const values = getSelectedValues( container );
+    const baseUrl = container.dataset.baseUrl;
+    const queryVar = container.dataset.queryVar;
+    const pageVar = container.dataset.pageVar;
+    const operator = container.dataset.operator || 'IN';
+    // eslint-disable-next-line no-console
+    console.debug( '[qf] native change', { values, baseUrl, queryVar, pageVar, operator } );
+    scheduleNavigateTaxonomy( container );
+}, true );
+
+document.addEventListener( 'click', ( e ) => {
+    const btn = e.target.closest( '.wp-block-query-filter__reset' );
+    if ( ! btn ) return;
+    const container = getContainer( btn );
+    if ( ! container ) return;
+    container
+        .querySelectorAll( '.wp-block-query-filter__checkbox:checked' )
+        .forEach( ( el ) => ( el.checked = false ) );
+    scheduleNavigateTaxonomy( container, 0 );
+}, true );
+
 // Initialize term visibility and counts on first load
 const initUpdate = () => {
     // Small timeout to ensure DOM is fully hydrated
     setTimeout( () => {
         // Prime state from existing markup (useful on direct visits without query params)
         primeCountsFromMarkup();
-        if ( ! hasAnyFilterParams() ) {
-            // Trigger a real reset click; if none found, fallback to fetching counts
-            const clicked = triggerResetClickOnce();
-            if ( ! clicked ) {
-                updateTermsVisibility();
-            }
-        } else {
-            // Otherwise just fetch authoritative counts and finalize state
-            updateTermsVisibility();
-        }
+        // Never auto-navigate on load: only compute counts/visibility.
+        updateTermsVisibility();
     }, 0 );
 };
 
@@ -347,6 +406,21 @@ if ( document.readyState === 'loading' ) {
 } else {
     initUpdate();
 }
+
+// Handle browser Back / Forward navigation.
+window.addEventListener( 'popstate', () => {
+    const region = document.querySelector( REGION_SELECTOR );
+    if ( ! region ) return;
+    // Re-fetch current (popped) URL and swap the query region (no pushState).
+    spaSwap( window.location.href, false ).catch( () => {
+        window.location.reload();
+    } );
+} );
+
+// Recompute counts/visibility after every SPA swap.
+document.addEventListener( 'query-filter:navigated', () => {
+    updateTermsVisibility();
+} );
 
 // External refresh hook (e.g., active-filters clear-all chip)
 document.addEventListener( 'query-filter:refresh', () => {

@@ -283,13 +283,19 @@ function render_block_search( string $block_content, array $block, \WP_Block $in
  * @return string
  */
 function render_block_query( $block_content, $block ) {
-	$block_content = new WP_HTML_Tag_Processor( $block_content );
-	$block_content->next_tag();
+	$processor = new WP_HTML_Tag_Processor( $block_content );
 
-	// Always allow region updates on interactivity, use standard core region naming.
-	$block_content->set_attribute( 'data-wp-router-region', 'query-' . ( $block['attrs']['queryId'] ?? 0 ) );
+	// In WP 6.9+ the first tag isn't always the wrapper we want.
+	// Target the core/query wrapper to ensure the router can update the region.
+	if ( ! $processor->next_tag( [ 'class_name' => 'wp-block-query' ] ) ) {
+		$processor->next_tag();
+	}
 
-	return (string) $block_content;
+	// Always allow region updates on interactivity.
+	// Use a stable region name so client navigation can reliably replace the Query Loop markup.
+	$processor->set_attribute( 'data-wp-router-region', 'query-filter' );
+
+	return (string) $processor;
 }
 
 /**

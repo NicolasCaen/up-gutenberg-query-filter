@@ -1,9 +1,9 @@
-# Query Loop Filter (Upcoder)
+# Query Loop Filter (Upcoder) test
 
 Plugin WordPress ajoutant des blocs de filtres pour le bloc « Boucle de requête » (Query Loop), avec l'API d'interactivité de Gutenberg.
 
 - Auteur: Upcoder
-- Version: 1.1.6
+- Version: 2.0.1
 - Text Domain: `up-gutenberg-query-filter`
 - Namespace PHP: `up\query_loop_filter`
 
@@ -68,6 +68,9 @@ Les sources sont dans `src/` et sont copiées/minifiées dans `build/` lors du b
 - PHP ≥ 8.0
 
 ## Journal des modifications
+### 2.0.1 — 2026-02-20
+- Compatibilité WordPress 6.9.x : ajustements de navigation interactivity pour garantir l’actualisation de la Query Loop.
+
 ### 1.1.6 — 2025-10-14
 - **Performance**: optimisation du chargement initial pour les requêtes personnalisées (non-héritées) avec Custom Post Type.
   - Les termes vides (sans posts associés au CPT spécifié) ne sont plus chargés au lancement de la page.
